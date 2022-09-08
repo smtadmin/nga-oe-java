@@ -6,9 +6,14 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersionDetector;
 import com.networknt.schema.ValidationMessage;
 
 import lombok.extern.log4j.Log4j2;
@@ -28,7 +33,7 @@ import nga.oe.schema.vo.RequestDTO;
  * @updates:
  ****************************************************************************/
 @Log4j2
-public class SchemaUtil<T> {
+public class SchemaUtil<T extends Parseable> {
 
 	/**
 	 * Defines the available error messages for this utility
@@ -50,6 +55,51 @@ public class SchemaUtil<T> {
 	// Members
 	ObjectMapper mapper;
 	
+	SchemaUtil() {
+		this.mapper = new ObjectMapper();
+		this.mapper.findAndRegisterModules();
+	}
+
+	/**
+	 * Attempts to validate given Object data against schema identified by given
+	 * schemaId and versionNo.
+	 * @param schemaId
+	 * @param versionNo
+	 * @param data
+	 * @return
+	 */
+	public Set<ValidationMessage> validate(RequestDTO req) {
+		JsonSchema schema;
+		JsonNode node;
+		try {
+			schema = convertSchema(req);
+			node = convertNode(req);
+		} catch (AppSchemaException e) {
+			return e.getIssues();
+		}
+		return schema.validate(node);
+	}
+
+	/**
+	 * Attempts to convert the schema portion of a given RequestDTO into a JsonSchema Object
+	 * @param req
+	 * @return
+	 * @throws AppSchemaException
+	 */
+	public JsonSchema convertSchema(RequestDTO req) throws AppSchemaException {
+		try {
+			JsonNode schemaNode = mapper.readTree(req.getSchema());
+			JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersionDetector.detect(schemaNode));
+			return factory.getSchema(schemaNode);
+		} catch (Exception e) {
+			log.error("Could not convert the schema on the request to JsonSchema");
+			Set<ValidationMessage> issues = new HashSet<>();
+			issues.add(new ValidationMessage.Builder().path(ErrorType.INVALID_SCHEMA_PATH.getMessage()).customMessage(ErrorType.INVALID_SCHEMA_MSG.getMessage())
+					.format(new MessageFormat("")).build());
+			throw new AppSchemaException(ErrorType.INVALID_SCHEMA_ERR_MSG.getMessage(), issues);
+		}
+	}
+
 	/**
 	 * Attempts to convert the data portion of a given RequestDTO into a JsonNode Object
 	 * @param req
@@ -95,12 +145,7 @@ public class SchemaUtil<T> {
 			Map.Entry<String, JsonNode> field = fields.next();
 			if(!ErrorType.BASE_SCHEMA_KEY.getMessage().equals(field.getKey())) {
 				if(field.getValue().isValueNode()) {
-					EventLogDataDTO eld = new EventLogDataDTO();
-					eld.setEventLog(dto.getEventLogId());
-					eld.setValueTxt(field.getValue().asText());
-					eld.setExtendedDataKeyCd(buildKey(parentKey, field.getKey()));
-
-					dto.getExtendedData().put(buildKey(parentKey, field.getKey()), eld);
+					dto.getUnMappedData().put(buildKey(parentKey, field.getKey()), field.getValue().asText());
 				} else {
 					extractExtras(field.getValue(), dto, buildKey(parentKey, field.getKey()));
 				}
@@ -127,5 +172,22 @@ public class SchemaUtil<T> {
 		}
 		
 		return dto;
+	}
+	
+	/**
+	 * Converts the given parentKey and key into a proper . delimited String. 
+	 * @param parentKey
+	 * @param key
+	 * @return
+	 */
+	protected String buildKey(String parentKey, String key) {
+		StringBuilder s = new StringBuilder(50);
+		if(!StringUtils.isEmpty(parentKey)) {
+			s.append(parentKey).append(".");
+		}
+		if(!StringUtils.isEmpty(key)) {
+			s.append(key);
+		}
+		return s.toString();
 	}
 }
