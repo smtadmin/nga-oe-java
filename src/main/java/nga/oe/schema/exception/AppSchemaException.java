@@ -7,7 +7,6 @@ import com.networknt.schema.ValidationMessage;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 /**
  * <b>Title:</b> AppSchemaException.java
  * <b>Project:</b> mf-db-mgmt
@@ -25,7 +24,6 @@ import lombok.ToString;
 @AllArgsConstructor
 @Setter
 @Getter
-@ToString
 public class AppSchemaException extends Exception {
 
 	private static final long serialVersionUID = 7921961456775367221L;
