@@ -121,7 +121,7 @@ publishing {
 		        }
 		    }
 			pom {
-				name = "nga-oe"
+				name = "nga-oe-java"
 			    description = "A libary of useful tools and helper objects."
 			    url = "https://github.com/smtadmin/nga-oe-java"
 			    licenses {
