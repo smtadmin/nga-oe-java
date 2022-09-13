@@ -21,7 +21,7 @@ plugins {
 group = 'com.siliconmtn'
 version = '0.1.0-SNAPSHOT'
 sourceCompatibility = '11'
-archivesBaseName = "nga-oe"
+archivesBaseName = "nga-oe-java"
 
 repositories {
     // Use jcenter for resolving dependencies.
@@ -69,7 +69,7 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.apache.pulsar/pulsar-client
 	implementation 'org.apache.pulsar:pulsar-client:2.10.1'
 
-	implementation 'com.siliconmtn:spacelibs-java:1.1.7-SNAPSHOT'
+	implementation 'com.siliconmtn:spacelibs-java:1.2.3-SNAPSHOT'
 
 }
 
@@ -107,64 +107,3 @@ java {
     withSourcesJar()
 }
 
-publishing {
-	publications {
-		spaceLibsJava(MavenPublication) {
-			artifactId = 'nga-oe-java'
-      		from components.java
-      		versionMapping {
-      			usage('java-api') {
-      				fromResolutionOf('runtimeClasspath')
-		        }
-		        usage('java-runtime') {
-		        	fromResolutionResult()
-		        }
-		    }
-			pom {
-				name = "nga-oe-java"
-			    description = "A libary of useful tools and helper objects."
-			    url = "https://github.com/smtadmin/nga-oe-java"
-			    licenses {
-			    	license {
-			        	name = "MIT License"
-			            url = "https://opensource.org/licenses/mit-license.php"
-			        }
-			    }
-			    developers {
-			    	developer {
-			        	id = "etewa"
-			        	name = "James Camire"
-			        	email = "james@siliconmtn.com"
-			        	organization = "Silicon Mountain Technologies, Inc."
-			        	organizationUrl = "https://www.siliconmtn.com"
-			        }
-			    }
-			    scm {
-			    	connection = "scm:git:git://github.com/smtadmin/nga-oe-java.git"
-			    	developerConnection = "scm:git:ssh://github.com:smtadmin/nga-oe-java.git"
-			    	url = "https://github.com/smtadmin/nga-oe-java/tree/main"
-			    }
-			}
-		}
-	}
-	repositories {
-		if (project.version.endsWith("-SNAPSHOT")){
-			maven {
-				credentials {
-					username project.ossrhUsername
-					password project.ossrhPassword
-				}
-            	url = "https://oss.sonatype.org/content/repositories/snapshots/"
-            }
-        }
-        else {
-        	maven {
-        		url = "$buildDir/repos/releases"
-        	}
-        }
-    }
-}
-
-signing {
-    sign publishing.publications.ngaOeJava
-}
