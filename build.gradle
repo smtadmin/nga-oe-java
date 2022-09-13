@@ -106,4 +106,65 @@ java {
     withJavadocJar()
     withSourcesJar()
 }
+publishing {
+	publications {
+		ngaOeJava(MavenPublication) {
+			artifactId = 'nga-oe-java'
+      		from components.java
+      		versionMapping {
+      			usage('java-api') {
+      				fromResolutionOf('runtimeClasspath')
+		        }
+		        usage('java-runtime') {
+		        	fromResolutionResult()
+		        }
+		    }
+			pom {
+				name = "nga-oe-java"
+			    description = "A libary of useful tools and helper objects."
+			    url = "https://github.com/smtadmin/nga-oe-java"
+			    licenses {
+			    	license {
+			        	name = "MIT License"
+			            url = "https://opensource.org/licenses/mit-license.php"
+			        }
+			    }
+			    developers {
+			    	developer {
+			        	id = "etewa"
+			        	name = "James Camire"
+			        	email = "james@siliconmtn.com"
+			        	organization = "Silicon Mountain Technologies, Inc."
+			        	organizationUrl = "https://www.siliconmtn.com"
+			        }
+			    }
+			    scm {
+			    	connection = "scm:git:git://github.com/smtadmin/nga-oe-java.git"
+			    	developerConnection = "scm:git:ssh://github.com:smtadmin/nga-oe-java.git"
+			    	url = "https://github.com/smtadmin/nga-oe-java/tree/main"
+			    }
+			}
+		}
+	}
+	repositories {
+		if (project.version.endsWith("-SNAPSHOT")){
+			maven {
+				credentials {
+					username project.ossrhUsername
+					password project.ossrhPassword
+				}
+            	url = "https://oss.sonatype.org/content/repositories/snapshots/"
+            }
+        }
+        else {
+        	maven {
+        		url = "$buildDir/repos/releases"
+        	}
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.ngaOeJava
+}
 
