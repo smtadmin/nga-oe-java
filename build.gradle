@@ -166,5 +166,5 @@ publishing {
 }
 
 signing {
-    sign publishing.publications.ngaOe
+    sign publishing.publications.ngaOeJava
 }
