@@ -110,7 +110,7 @@ java {
 publishing {
 	publications {
 		spaceLibsJava(MavenPublication) {
-			artifactId = 'nga-oe'
+			artifactId = 'nga-oe-java'
       		from components.java
       		versionMapping {
       			usage('java-api') {
@@ -123,7 +123,7 @@ publishing {
 			pom {
 				name = "nga-oe"
 			    description = "A libary of useful tools and helper objects."
-			    url = "https://github.com/smtadmin/nga-oe"
+			    url = "https://github.com/smtadmin/nga-oe-java"
 			    licenses {
 			    	license {
 			        	name = "MIT License"
@@ -140,9 +140,9 @@ publishing {
 			        }
 			    }
 			    scm {
-			    	connection = "scm:git:git://github.com/smtadmin/nga-oe.git"
-			    	developerConnection = "scm:git:ssh://github.com:smtadmin/nga-oe.git"
-			    	url = "https://github.com/smtadmin/nga-oe/tree/main"
+			    	connection = "scm:git:git://github.com/smtadmin/nga-oe-java.git"
+			    	developerConnection = "scm:git:ssh://github.com:smtadmin/nga-oe-java.git"
+			    	url = "https://github.com/smtadmin/nga-oe-java/tree/main"
 			    }
 			}
 		}
