@@ -5,12 +5,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * <b>Title:</b> Violation.java
- * <b>Project:</b> Notifications MicroService
+ * <b>Title:</b> Violation.java <b>Project:</b> Notifications MicroService
  * <b>Description:</b> Container for holding specific validation violations.
  *
- * <b>Copyright:</b> 2022
- * <b>Company:</b> Silicon Mountain Technologies
+ * <b>Copyright:</b> 2022 <b>Company:</b> Silicon Mountain Technologies
  * 
  * @author raptor
  * @version 1.0

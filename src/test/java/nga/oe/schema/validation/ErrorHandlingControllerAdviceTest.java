@@ -29,13 +29,11 @@ import nga.oe.schema.vo.RequestDTO;
 import nga.oe.schema.vo.ValidationErrorResponse;
 
 /**
- * <b>Title:</b> ErrorHandlingControllerAdviceTest.java
- * <b>Project:</b> Notifications MicroService 
- * <b>Description:</b> Unit Tests providing coverage for the
- * ErrorHandlingControllerAdvice Class
+ * <b>Title:</b> ErrorHandlingControllerAdviceTest.java <b>Project:</b>
+ * Notifications MicroService <b>Description:</b> Unit Tests providing coverage
+ * for the ErrorHandlingControllerAdvice Class
  *
- * <b>Copyright:</b> 2022
- * <b>Company:</b> Silicon Mountain Technologies
+ * <b>Copyright:</b> 2022 <b>Company:</b> Silicon Mountain Technologies
  * 
  * @author raptor
  * @version 1.0

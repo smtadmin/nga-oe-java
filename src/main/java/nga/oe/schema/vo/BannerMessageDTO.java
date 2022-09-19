@@ -8,12 +8,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * <b>Title:</b> NotificationEvent.java
- * <b>Project:</b> Notifications MicroService
- * <b>Description:</b> Entity for managing Notification Events
+ * <b>Title:</b> NotificationEvent.java <b>Project:</b> Notifications
+ * MicroService <b>Description:</b> Entity for managing Notification Events
  *
- * <b>Copyright:</b> 2022
- * <b>Company:</b> Silicon Mountain Technologies
+ * <b>Copyright:</b> 2022 <b>Company:</b> Silicon Mountain Technologies
  * 
  * @author raptor
  * @version 1.0

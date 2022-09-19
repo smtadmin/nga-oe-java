@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,11 +22,9 @@ import nga.oe.schema.exception.AppSchemaException;
 import nga.oe.schema.vo.RequestDTO;
 
 /****************************************************************************
- * <b>Title</b>: SchemaUtil.java
- * <b>Project</b>: nga-oe
- * <b>Description: </b> CHANGE ME!
- * <b>Copyright:</b> Copyright (c) 2022
- * <b>Company:</b> Silicon Mountain Technologies
+ * <b>Title</b>: SchemaUtil.java <b>Project</b>: nga-oe <b>Description: </b>
+ * CHANGE ME! <b>Copyright:</b> Copyright (c) 2022 <b>Company:</b> Silicon
+ * Mountain Technologies
  * 
  * @author James Camire
  * @version 3.0
@@ -33,28 +32,32 @@ import nga.oe.schema.vo.RequestDTO;
  * @updates:
  ****************************************************************************/
 @Log4j2
+@Component
 public class SchemaUtil<T extends Parseable> {
 
 	/**
 	 * Defines the available error messages for this utility
 	 */
 	public enum ErrorType {
-		INVALID_DATA_PATH("data"),
-		INVALID_SCHEMA_PATH("schema"),
-		INVALID_DATA_MSG("Data could not be parsed into JsonNode"),
-		INVALID_SCHEMA_MSG("Provided Schema was invalid."),
-		BASE_SCHEMA_KEY("baseSchema"),
-		INVALID_SCHEMA_ERR_MSG("Invalid Schema Data"),
+		INVALID_DATA_PATH("data"), INVALID_SCHEMA_PATH("schema"),
+		INVALID_DATA_MSG("Data could not be parsed into JsonNode"), INVALID_SCHEMA_MSG("Provided Schema was invalid."),
+		BASE_SCHEMA_KEY("baseSchema"), INVALID_SCHEMA_ERR_MSG("Invalid Schema Data"),
 		INVALID_DATA_ERR_MSG("Invalid Payload Data");
-		
+
 		String message;
-		ErrorType(String message) { this.message = message; }
-		public String getMessage() { return message; }
+
+		ErrorType(String message) {
+			this.message = message;
+		}
+
+		public String getMessage() {
+			return message;
+		}
 	}
-	
+
 	// Members
 	ObjectMapper mapper;
-	
+
 	SchemaUtil() {
 		this.mapper = new ObjectMapper();
 		this.mapper.findAndRegisterModules();
@@ -63,6 +66,7 @@ public class SchemaUtil<T extends Parseable> {
 	/**
 	 * Attempts to validate given Object data against schema identified by given
 	 * schemaId and versionNo.
+	 * 
 	 * @param schemaId
 	 * @param versionNo
 	 * @param data
@@ -81,7 +85,9 @@ public class SchemaUtil<T extends Parseable> {
 	}
 
 	/**
-	 * Attempts to convert the schema portion of a given RequestDTO into a JsonSchema Object
+	 * Attempts to convert the schema portion of a given RequestDTO into a
+	 * JsonSchema Object
+	 * 
 	 * @param req
 	 * @return
 	 * @throws AppSchemaException
@@ -94,14 +100,16 @@ public class SchemaUtil<T extends Parseable> {
 		} catch (Exception e) {
 			log.error("Could not convert the schema on the request to JsonSchema");
 			Set<ValidationMessage> issues = new HashSet<>();
-			issues.add(new ValidationMessage.Builder().path(ErrorType.INVALID_SCHEMA_PATH.getMessage()).customMessage(ErrorType.INVALID_SCHEMA_MSG.getMessage())
-					.format(new MessageFormat("")).build());
+			issues.add(new ValidationMessage.Builder().path(ErrorType.INVALID_SCHEMA_PATH.getMessage())
+					.customMessage(ErrorType.INVALID_SCHEMA_MSG.getMessage()).format(new MessageFormat("")).build());
 			throw new AppSchemaException(ErrorType.INVALID_SCHEMA_ERR_MSG.getMessage(), issues);
 		}
 	}
 
 	/**
-	 * Attempts to convert the data portion of a given RequestDTO into a JsonNode Object
+	 * Attempts to convert the data portion of a given RequestDTO into a JsonNode
+	 * Object
+	 * 
 	 * @param req
 	 * @return
 	 * @throws AppSchemaException
@@ -113,15 +121,15 @@ public class SchemaUtil<T extends Parseable> {
 			log.error("Could not convert the Data on the request to JsonNode");
 			Set<ValidationMessage> issues = new HashSet<>();
 			issues.add(new ValidationMessage.Builder().path(ErrorType.INVALID_DATA_PATH.getMessage())
-					.customMessage(ErrorType.INVALID_DATA_MSG.getMessage())
-					.format(new MessageFormat("")).build());
+					.customMessage(ErrorType.INVALID_DATA_MSG.getMessage()).format(new MessageFormat("")).build());
 			throw new AppSchemaException(ErrorType.INVALID_DATA_ERR_MSG.getMessage(), issues);
 		}
 	}
-	
+
 	/**
-	 * In cases that we're using a customized Variant, look for the BaseSchema, convert that to an EventLogDTO
-	 * then grab all extra fields as extras.
+	 * In cases that we're using a customized Variant, look for the BaseSchema,
+	 * convert that to an EventLogDTO then grab all extra fields as extras.
+	 * 
 	 * @param node
 	 * @return
 	 * @throws JsonProcessingException
@@ -132,19 +140,21 @@ public class SchemaUtil<T extends Parseable> {
 		extractExtras(node, dto, "");
 		return dto;
 	}
-	
+
 	/**
-	 * Recursively iterate down the object storing keys as it goes on the given EventLogDTO's extendedData Map.
+	 * Recursively iterate down the object storing keys as it goes on the given
+	 * EventLogDTO's extendedData Map.
+	 * 
 	 * @param node
 	 * @param dto
 	 * @param parentKey
 	 */
 	public void extractExtras(JsonNode node, T dto, String parentKey) {
 		Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
-		while(fields.hasNext()) {
+		while (fields.hasNext()) {
 			Map.Entry<String, JsonNode> field = fields.next();
-			if(!ErrorType.BASE_SCHEMA_KEY.getMessage().equals(field.getKey())) {
-				if(field.getValue().isValueNode()) {
+			if (!ErrorType.BASE_SCHEMA_KEY.getMessage().equals(field.getKey())) {
+				if (field.getValue().isValueNode()) {
 					dto.getUnMappedData().put(buildKey(parentKey, field.getKey()), field.getValue().asText());
 				} else {
 					extractExtras(field.getValue(), dto, buildKey(parentKey, field.getKey()));
@@ -155,6 +165,7 @@ public class SchemaUtil<T extends Parseable> {
 
 	/**
 	 * Attempts to convert the given RequestDTO into an EventLogDTO
+	 * 
 	 * @param req
 	 * @return
 	 */
@@ -162,7 +173,7 @@ public class SchemaUtil<T extends Parseable> {
 		T dto = null;
 		try {
 			JsonNode node = convertNode(req);
-			if(node.has(ErrorType.BASE_SCHEMA_KEY.getMessage())) {
+			if (node.has(ErrorType.BASE_SCHEMA_KEY.getMessage())) {
 				dto = parseCustom(node, bean);
 			} else {
 				dto = mapper.treeToValue(node, bean);
@@ -170,22 +181,23 @@ public class SchemaUtil<T extends Parseable> {
 		} catch (AppSchemaException | JsonProcessingException | IllegalArgumentException e) {
 			log.error("Error Processing Request", e);
 		}
-		
+
 		return dto;
 	}
-	
+
 	/**
-	 * Converts the given parentKey and key into a proper . delimited String. 
+	 * Converts the given parentKey and key into a proper . delimited String.
+	 * 
 	 * @param parentKey
 	 * @param key
 	 * @return
 	 */
-	protected String buildKey(String parentKey, String key) {
+	public String buildKey(String parentKey, String key) {
 		StringBuilder s = new StringBuilder(50);
-		if(!StringUtils.isEmpty(parentKey)) {
+		if (!StringUtils.isEmpty(parentKey)) {
 			s.append(parentKey).append(".");
 		}
-		if(!StringUtils.isEmpty(key)) {
+		if (!StringUtils.isEmpty(key)) {
 			s.append(key);
 		}
 		return s.toString();

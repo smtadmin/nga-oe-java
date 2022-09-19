@@ -89,14 +89,6 @@
       "description": "Input Parameters of the Service (Env Variables) or Optional Payload of the data coming out of Service.",
       "type": "object"
     },
-    "eventDetails": {
-      "description": "Optional Longer Description if more information is provided",
-      "type": "string"
-    },
-    "stackTrace": {
-      "description": "Optional Stack Trace of the Event.  Will not be captured at all log levels",
-      "type": "string"
-    },
     "originalOrderId": {
       "description": "Optional Provided OrderId in event of a retry?",
       "type": "string",

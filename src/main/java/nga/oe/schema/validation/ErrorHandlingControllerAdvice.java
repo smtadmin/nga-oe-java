@@ -18,13 +18,11 @@ import nga.oe.schema.vo.ValidationErrorResponse;
 import nga.oe.schema.vo.Violation;
 
 /**
- * <b>Title:</b> ErrorHandlingControllerAdvice.java
- * <b>Project:</b> Notifications MicroService
- * <b>Description:</b> Advice for RESTControllers on how to handle Exceptions
- * that are thrown gracefully into a common format.
+ * <b>Title:</b> ErrorHandlingControllerAdvice.java <b>Project:</b>
+ * Notifications MicroService <b>Description:</b> Advice for RESTControllers on
+ * how to handle Exceptions that are thrown gracefully into a common format.
  *
- * <b>Copyright:</b> 2022
- * <b>Company:</b> Silicon Mountain Technologies
+ * <b>Copyright:</b> 2022 <b>Company:</b> Silicon Mountain Technologies
  * 
  * @author raptor
  * @version 1.0
@@ -33,10 +31,11 @@ import nga.oe.schema.vo.Violation;
  *
  */
 @ControllerAdvice
-class ErrorHandlingControllerAdvice {
+public class ErrorHandlingControllerAdvice {
 
 	/**
 	 * Convert ConstraintViolationException thrown during DTO Validations
+	 * 
 	 * @param e
 	 * @return
 	 */
@@ -52,7 +51,9 @@ class ErrorHandlingControllerAdvice {
 	}
 
 	/**
-	 * Convert MethodArgumentNotValidException thrown during method level argument Validations
+	 * Convert MethodArgumentNotValidException thrown during method level argument
+	 * Validations
+	 * 
 	 * @param e
 	 * @return
 	 */
@@ -68,7 +69,9 @@ class ErrorHandlingControllerAdvice {
 	}
 
 	/**
-	 * Convert AppSchemaException thrown during internal processing/validation of json data against a schema.
+	 * Convert AppSchemaException thrown during internal processing/validation of
+	 * json data against a schema.
+	 * 
 	 * @param e
 	 * @return
 	 */

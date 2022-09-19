@@ -4,9 +4,11 @@ package nga.oe.pulsar;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.Map;
 // JDK 11
 import java.util.UUID;
 
@@ -101,11 +103,14 @@ class MessageSenderTest {
 		ProducerBuilder<byte[]> pb = Mockito.mock(ProducerBuilder.class);
 		Mockito.when(client.newProducer()).thenReturn(pb);
 		Mockito.when(pb.topic(any())).thenReturn(pb);
+		Mockito.when(pb.properties(anyMap())).thenReturn(pb);
 		Mockito.when(pb.producerName(any())).thenReturn(pb);
 		Mockito.when(pb.create()).thenReturn(producer);
-		assertNotNull(sender.sendLog(msg));
+
+		Map<String, String> props = new HashMap<>();
+		assertNotNull(sender.sendLog(msg, props));
 	}
-	
+
 	/**
 	 * Tests the sending of the logs
 	 * 
@@ -133,9 +138,11 @@ class MessageSenderTest {
 		ProducerBuilder<byte[]> pb = Mockito.mock(ProducerBuilder.class);
 		Mockito.when(client.newProducer()).thenReturn(pb);
 		Mockito.when(pb.topic(any())).thenReturn(pb);
+		Mockito.when(pb.properties(anyMap())).thenReturn(pb);
 		Mockito.when(pb.producerName(any())).thenReturn(pb);
 		Mockito.when(pb.create()).thenReturn(producer);
-		assertNotNull(sender.sendErrorLog(e));
+		Map<String, String> props = new HashMap<>();
+		assertNotNull(sender.sendErrorLog(e, props));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -163,9 +170,11 @@ class MessageSenderTest {
 		ProducerBuilder<byte[]> pb = Mockito.mock(ProducerBuilder.class);
 		Mockito.when(client.newProducer()).thenReturn(pb);
 		Mockito.when(pb.topic(any())).thenReturn(pb);
+		Mockito.when(pb.properties(anyMap())).thenReturn(pb);
 		Mockito.when(pb.producerName(any())).thenReturn(pb);
 		Mockito.when(pb.create()).thenReturn(producer);
-		assertNull(sender.sendLog(msg));
+		Map<String, String> props = new HashMap<>();
+		assertNull(sender.sendLog(msg, props));
 	}
 
 	/**
@@ -192,10 +201,11 @@ class MessageSenderTest {
 		ProducerBuilder<byte[]> pb = Mockito.mock(ProducerBuilder.class);
 		Mockito.when(client.newProducer()).thenReturn(pb);
 		Mockito.when(pb.topic(any())).thenReturn(pb);
+		Mockito.when(pb.properties(anyMap())).thenReturn(pb);
 		Mockito.when(pb.producerName(any())).thenReturn(pb);
 		Mockito.when(pb.create()).thenReturn(producer);
-
-		assertNotNull(sender.sendGumdrop(msg));
+		Map<String, String> props = new HashMap<>();
+		assertNotNull(sender.sendGumdrop(msg, props));
 	}
 
 	/**
@@ -222,9 +232,10 @@ class MessageSenderTest {
 		ProducerBuilder<byte[]> pb = Mockito.mock(ProducerBuilder.class);
 		Mockito.when(client.newProducer()).thenReturn(pb);
 		Mockito.when(pb.topic(any())).thenReturn(pb);
+		Mockito.when(pb.properties(anyMap())).thenReturn(pb);
 		Mockito.when(pb.producerName(any())).thenReturn(pb);
 		Mockito.when(pb.create()).thenReturn(producer);
-
-		assertNotNull(sender.sendBanner(msg));
+		Map<String, String> props = new HashMap<>();
+		assertNotNull(sender.sendBanner(msg, props));
 	}
 }

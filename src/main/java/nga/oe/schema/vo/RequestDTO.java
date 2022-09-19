@@ -1,5 +1,7 @@
 package nga.oe.schema.vo;
 
+import java.util.UUID;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,7 +26,14 @@ import lombok.Setter;
 @Setter
 @Getter
 public class RequestDTO {
-	String schema;
+	public RequestDTO(String schema, String data) {
+		this.schema = schema;
+		this.data = data;
+	}
 
+	String schema;
 	String data;
+
+	UUID sessionId;
+	UUID uiTransactionId;
 }
