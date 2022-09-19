@@ -61,8 +61,6 @@ public class MachineLogDTO extends Parseable implements BaseDTO {
 	private String eventName;
 	private String eventSummary;
 	private Object payload;
-	private String eventDetails;
-	private String stackTrace;
 	private String originalOrderId;
 
 	private UUID userId;

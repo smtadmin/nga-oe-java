@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Configuration
-@ConfigurationProperties(prefix = "conf") 
+@ConfigurationProperties(prefix = "conf")
 @ConfigurationPropertiesScan
 @NoArgsConstructor
 @Setter

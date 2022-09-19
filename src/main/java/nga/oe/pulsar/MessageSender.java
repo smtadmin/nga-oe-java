@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UncheckedIOException;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.pulsar.client.api.MessageId;
@@ -37,13 +38,11 @@ import nga.oe.schema.vo.MachineLogDTO.LogLevel;
 import nga.oe.schema.vo.RequestDTO;
 
 /**
- * <b>Title:</b> MessageSender.java
- * <b>Project:</b> HFDB MicroService
+ * <b>Title:</b> MessageSender.java <b>Project:</b> HFDB MicroService
  * <b>Description:</b> Helper Component for sending Async Messages out of the
  * System.
  *
- * <b>Copyright:</b> 2022
- * <b>Company:</b> Silicon Mountain Technologies
+ * <b>Copyright:</b> 2022 <b>Company:</b> Silicon Mountain Technologies
  * 
  * @author raptor
  * @version 1.0
@@ -78,6 +77,7 @@ public class MessageSender {
 
 	/**
 	 * Default constructor loads the schema for the machineLog.
+	 * 
 	 * @param mapper
 	 */
 	public MessageSender(ObjectMapper mapper) {
@@ -85,37 +85,37 @@ public class MessageSender {
 		mapper.findAndRegisterModules();
 		try {
 			Resource resource = new ClassPathResource("machine_feedback_schema.json");
-			ObjectMapper objectMapper = new ObjectMapper();
-			objectMapper.findAndRegisterModules();
 			schema = asString(resource);
-		} catch(Exception e) {
+		} catch (Exception e) {
 			log.error(e);
 		}
 	}
 
 	/**
 	 * Read a resource as a String.
+	 * 
 	 * @param resource
 	 * @return
 	 */
 	public static String asString(Resource resource) {
-        try (Reader reader = new InputStreamReader(resource.getInputStream())) {
-            return FileCopyUtils.copyToString(reader);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
+		try (Reader reader = new InputStreamReader(resource.getInputStream())) {
+			return FileCopyUtils.copyToString(reader);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
+	}
 
 	/**
 	 * Drop a message into the Logging Topic
+	 * 
 	 * @param o
 	 * @throws PulsarClientException
 	 */
-	public MessageId sendLog(MachineLogDTO mLog) throws PulsarClientException {
+	public MessageId sendLog(MachineLogDTO mLog, Map<String, String> properties) throws PulsarClientException {
 		TopicConfig lConfig = config.getTopics().get(LOGGING_TOPIC);
 		MessageId mId = null;
-		if(mLog.isValid()) {
-			try(Producer<byte[]> p = buildProducer(lConfig.getTopicUri(), lConfig.getName())) {
+		if (mLog.isValid()) {
+			try (Producer<byte[]> p = buildProducer(lConfig.getTopicUri(), lConfig.getName(), properties)) {
 				String json = mapper.writeValueAsString(mLog);
 				log.info(json);
 				RequestDTO rdto = new RequestDTO(schema, json);
@@ -130,12 +130,13 @@ public class MessageSender {
 	}
 
 	/**
-	 * Send an Exception on to the Pulsar Server. 
+	 * Send an Exception on to the Pulsar Server.
+	 * 
 	 * @param e
 	 * @return
 	 * @throws PulsarClientException
 	 */
-	public MessageId sendErrorLog(Exception e) {
+	public MessageId sendErrorLog(Exception e, Map<String, String> properties) {
 		MachineLogDTO msg = new MachineLogDTO();
 		msg.setEventTypeCd(EventTypeCd.EVENT_IN_PROGRESS);
 		msg.setLogLevel(LogLevel.SYSTEM);
@@ -149,7 +150,7 @@ public class MessageSender {
 		msg.setSessionId(UUID.randomUUID());
 		MessageId mId = null;
 		try {
-			mId = sendLog(msg);
+			mId = sendLog(msg, properties);
 		} catch (PulsarClientException e1) {
 			log.error(e1);
 		}
@@ -158,14 +159,15 @@ public class MessageSender {
 
 	/**
 	 * Drop a message into the Banner Topic
+	 * 
 	 * @param notification
 	 * @throws PulsarClientException
 	 */
-	public MessageId sendBanner(BannerMessageDTO bmMsg) throws PulsarClientException {
+	public MessageId sendBanner(BannerMessageDTO bmMsg, Map<String, String> properties) throws PulsarClientException {
 		MessageId mId = null;
 		TopicConfig bConfig = config.getTopics().get(BANNER_TOPIC);
 
-		try(Producer<byte[]> p = buildProducer(bConfig.getTopicUri(), bConfig.getName())) {
+		try (Producer<byte[]> p = buildProducer(bConfig.getTopicUri(), bConfig.getName(), properties)) {
 			String json;
 			try {
 				json = mapper.writeValueAsString(bmMsg);
@@ -177,18 +179,19 @@ public class MessageSender {
 		}
 		return mId;
 	}
-	
+
 	/**
 	 * Drop a message to the Gumdrop Topic
+	 * 
 	 * @param gdMsg
 	 * @return
 	 * @throws PulsarClientException
 	 */
-	public MessageId sendGumdrop(GumdropMessageDTO gdMsg) throws PulsarClientException {
+	public MessageId sendGumdrop(GumdropMessageDTO gdMsg, Map<String, String> properties) throws PulsarClientException {
 		TopicConfig gConfig = config.getTopics().get(GUMDROP_TOPIC);
 		MessageId mId = null;
 
-		try(Producer<byte[]> p = buildProducer(gConfig.getTopicUri(), gConfig.getName())) {
+		try (Producer<byte[]> p = buildProducer(gConfig.getTopicUri(), gConfig.getName(), properties)) {
 			String json;
 			try {
 				json = mapper.writeValueAsString(gdMsg);
@@ -203,15 +206,14 @@ public class MessageSender {
 
 	/**
 	 * Builds a Producer for given topicUri and name;
+	 * 
 	 * @param topicUri
 	 * @param name
 	 * @return
 	 * @throws PulsarClientException
 	 */
-	public Producer<byte[]> buildProducer(String topicUri, String topicName) throws PulsarClientException {
-		return client.newProducer()
-		.topic(topicUri)
-		.producerName(topicName)
-		.create();
+	public Producer<byte[]> buildProducer(String topicUri, String topicName, Map<String, String> properties)
+			throws PulsarClientException {
+		return client.newProducer().topic(topicUri).producerName(topicName).properties(properties).create();
 	}
 }

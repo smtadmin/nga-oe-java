@@ -31,7 +31,7 @@ import lombok.ToString;
 @ToString
 public class NotificationTypeDTO implements BaseDTO {
 
-	public enum NotificationType {alert, gumdrop}
+	public enum NotificationType {alert, gumdrop, email, sms}
 	private static final long serialVersionUID = 37184217119585672L;
 
 	private UUID notificationTypeXrId = UUID.randomUUID();

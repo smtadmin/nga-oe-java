@@ -33,7 +33,6 @@ import nga.oe.schema.vo.RequestDTO;
 @ContextConfiguration(classes = { SchemaUtil.class })
 class SchemaUtilTest {
 
-
 	@Autowired
 	SchemaUtil<MachineLogDTO> service;
 
@@ -173,16 +172,17 @@ class SchemaUtilTest {
 	void buildKeyNull() {
 		assertEquals("", service.buildKey(null, null));
 	}
-	
+
 	@Test
 	void buildKeyParentOnly() {
 		assertEquals("Hello.", service.buildKey("Hello", null));
 	}
-	
+
 	@Test
 	void buildKeyKeyOnly() {
 		assertEquals("world", service.buildKey(null, "world"));
 	}
+
 	@Test
 	void buildKeyParentAndKey() {
 		assertEquals("Hello.world", service.buildKey("Hello", "world"));

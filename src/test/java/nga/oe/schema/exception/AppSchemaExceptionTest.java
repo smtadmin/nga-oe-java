@@ -13,7 +13,7 @@ class AppSchemaExceptionTest {
 
 	@Test
 	void validateConstructorTest() {
-		final String msg = "Test Message"; 
+		final String msg = "Test Message";
 		Set<ValidationMessage> issues = new HashSet<>();
 		issues.add(new ValidationMessage.Builder().customMessage("Test Issue").path("test").build());
 		AppSchemaException ase = new AppSchemaException(msg, issues);
