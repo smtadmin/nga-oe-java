@@ -1,5 +1,6 @@
 package nga.oe.pulsar;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 // Junit 5
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -33,7 +34,9 @@ import nga.oe.schema.vo.BannerMessageDTO;
 import nga.oe.schema.vo.GumdropMessageDTO;
 import nga.oe.schema.vo.MachineLogDTO;
 import nga.oe.schema.vo.MachineLogDTO.ClassificationLevel;
+import nga.oe.schema.vo.MachineLogDTO.Environment;
 import nga.oe.schema.vo.MachineLogDTO.LogLevel;
+import nga.oe.schema.vo.RequestDTO;
 
 /**
  * <b>Title:</b> MessageSenderTest.java <b>Project:</b> HFDB MicroService
@@ -128,6 +131,7 @@ class MessageSenderTest {
 
 		sender = new MessageSender(mapper);
 		sender.appConfig = new ApplicationConfig();
+		sender.appConfig.setEnvironmentCd(Environment.XC.name());
 		sender.appConfig.setClassificationLevel(ClassificationLevel.UNCLASSIFIED.name());
 		sender.appConfig.setMicroServiceId("notification:system");
 		sender.appConfig.setServiceId("HMF");
@@ -142,7 +146,72 @@ class MessageSenderTest {
 		Mockito.when(pb.producerName(any())).thenReturn(pb);
 		Mockito.when(pb.create()).thenReturn(producer);
 		Map<String, String> props = new HashMap<>();
-		assertNotNull(sender.sendErrorLog(e, props));
+		props.put(RequestDTOMessageListener.SESSION_ID, UUID.randomUUID().toString());
+		assertNotNull(sender.sendErrorLog(e, "SampleEvent", props));
+	}
+
+	@Test
+	void testBaseMessageGenerationEmptyArgs() {
+		sender = new MessageSender(mapper);
+		sender.appConfig = new ApplicationConfig();
+		sender.appConfig.setEnvironmentCd(Environment.XC.name());
+		sender.appConfig.setClassificationLevel(ClassificationLevel.UNCLASSIFIED.name());
+		sender.appConfig.setMicroServiceId("notification:system");
+		sender.appConfig.setServiceId("HMF");
+		MachineLogDTO msg = sender.generateBaseMachineLogWithStrings(null, "");
+
+		assertNotNull(msg);
+		assertNotNull(msg.getExecutionDateTime());
+		assertEquals(sender.appConfig.getClassificationLevel(), msg.getClassificationLevel().name());
+		assertEquals(sender.appConfig.getEnvironmentCd(), msg.getEnvironment().name());
+		assertEquals(sender.appConfig.getServiceId(), msg.getServiceId());
+		assertEquals(sender.appConfig.getMicroServiceId(), msg.getMicroServiceId());
+		assertNull(msg.getSessionId());
+		assertNull(msg.getUiTransactionId());
+	}
+
+	@Test
+	void testBaseMessageGenerationStringArgs() {
+		sender = new MessageSender(mapper);
+		sender.appConfig = new ApplicationConfig();
+		sender.appConfig.setClassificationLevel(ClassificationLevel.UNCLASSIFIED.name());
+		sender.appConfig.setEnvironmentCd(Environment.XC.name());
+		sender.appConfig.setMicroServiceId("notification:system");
+		sender.appConfig.setServiceId("HMF");
+		UUID sessId = UUID.randomUUID();
+		UUID transId = UUID.randomUUID();
+		MachineLogDTO msg = sender.generateBaseMachineLogWithStrings(sessId.toString(), transId.toString());
+
+		assertNotNull(msg);
+		assertNotNull(msg.getExecutionDateTime());
+		assertEquals(sender.appConfig.getClassificationLevel(), msg.getClassificationLevel().name());
+		assertEquals(sender.appConfig.getEnvironmentCd(), msg.getEnvironment().name());
+		assertEquals(sender.appConfig.getServiceId(), msg.getServiceId());
+		assertEquals(sender.appConfig.getMicroServiceId(), msg.getMicroServiceId());
+		assertEquals(sessId, msg.getSessionId());
+		assertEquals(transId, msg.getUiTransactionId());
+	}
+
+	@Test
+	void testBaseMessageGenerationUUIDArgs() {
+		sender = new MessageSender(mapper);
+		sender.appConfig = new ApplicationConfig();
+		sender.appConfig.setClassificationLevel(ClassificationLevel.UNCLASSIFIED.name());
+		sender.appConfig.setEnvironmentCd(Environment.XC.name());
+		sender.appConfig.setMicroServiceId("notification:system");
+		sender.appConfig.setServiceId("HMF");
+		UUID sessId = UUID.randomUUID();
+		UUID transId = UUID.randomUUID();
+		MachineLogDTO msg = sender.generateBaseMachineLog(sessId, transId);
+
+		assertNotNull(msg);
+		assertNotNull(msg.getExecutionDateTime());
+		assertEquals(sender.appConfig.getClassificationLevel(), msg.getClassificationLevel().name());
+		assertEquals(sender.appConfig.getEnvironmentCd(), msg.getEnvironment().name());
+		assertEquals(sender.appConfig.getServiceId(), msg.getServiceId());
+		assertEquals(sender.appConfig.getMicroServiceId(), msg.getMicroServiceId());
+		assertEquals(sessId, msg.getSessionId());
+		assertEquals(transId, msg.getUiTransactionId());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -237,5 +306,33 @@ class MessageSenderTest {
 		Mockito.when(pb.create()).thenReturn(producer);
 		Map<String, String> props = new HashMap<>();
 		assertNotNull(sender.sendBanner(msg, props));
+	}
+
+	@Test
+	void testExtractPropsValid() {
+		RequestDTO dto = new RequestDTO();
+		dto.setSessionId(UUID.randomUUID());
+		dto.setUiTransactionId(UUID.randomUUID());
+		Map<String, String> props = MessageSender.extractProps(dto);
+		assertEquals(dto.getSessionId().toString(), props.get(RequestDTOMessageListener.SESSION_ID));
+		assertEquals(dto.getUiTransactionId().toString(), props.get(RequestDTOMessageListener.TRANSACTION_ID));
+	}
+
+	@Test
+	void testNoSessionId() {
+		RequestDTO dto = new RequestDTO();
+		dto.setUiTransactionId(UUID.randomUUID());
+		Map<String, String> props = MessageSender.extractProps(dto);
+		assertNull(props.get(RequestDTOMessageListener.SESSION_ID));
+		assertEquals(dto.getUiTransactionId().toString(), props.get(RequestDTOMessageListener.TRANSACTION_ID));
+	}
+
+	@Test
+	void testNoTransactionId() {
+		RequestDTO dto = new RequestDTO();
+		dto.setSessionId(UUID.randomUUID());
+		Map<String, String> props = MessageSender.extractProps(dto);
+		assertEquals(dto.getSessionId().toString(), props.get(RequestDTOMessageListener.SESSION_ID));
+		assertNull(props.get(RequestDTOMessageListener.TRANSACTION_ID));
 	}
 }

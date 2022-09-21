@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UncheckedIOException;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -23,6 +24,11 @@ import org.springframework.util.FileCopyUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.siliconmtn.data.text.StringUtil;
 import com.siliconmtn.data.util.EnumUtil;
 import com.siliconmtn.pulsar.PulsarConfig;
 import com.siliconmtn.pulsar.TopicConfig;
@@ -33,6 +39,7 @@ import nga.oe.schema.vo.BannerMessageDTO;
 import nga.oe.schema.vo.GumdropMessageDTO;
 import nga.oe.schema.vo.MachineLogDTO;
 import nga.oe.schema.vo.MachineLogDTO.ClassificationLevel;
+import nga.oe.schema.vo.MachineLogDTO.Environment;
 import nga.oe.schema.vo.MachineLogDTO.EventTypeCd;
 import nga.oe.schema.vo.MachineLogDTO.LogLevel;
 import nga.oe.schema.vo.RequestDTO;
@@ -83,9 +90,12 @@ public class MessageSender {
 	public MessageSender(ObjectMapper mapper) {
 		this.mapper = mapper;
 		mapper.findAndRegisterModules();
+		Gson gson = new GsonBuilder().create();
+
 		try {
 			Resource resource = new ClassPathResource("machine_feedback_schema.json");
-			schema = asString(resource);
+			JsonElement el = JsonParser.parseString(asString(resource));
+			schema = gson.toJson(el);
 		} catch (Exception e) {
 			log.error(e);
 		}
@@ -99,7 +109,7 @@ public class MessageSender {
 	 */
 	public static String asString(Resource resource) {
 		try (Reader reader = new InputStreamReader(resource.getInputStream())) {
-			return FileCopyUtils.copyToString(reader);
+			return FileCopyUtils.copyToString(reader).replace("\n", "").replace("\r", "");
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
@@ -136,18 +146,14 @@ public class MessageSender {
 	 * @return
 	 * @throws PulsarClientException
 	 */
-	public MessageId sendErrorLog(Exception e, Map<String, String> properties) {
-		MachineLogDTO msg = new MachineLogDTO();
+	public MessageId sendErrorLog(Exception e, String eventName, Map<String, String> properties) {
+		MachineLogDTO msg = generateBaseMachineLogWithStrings(properties.get(RequestDTOMessageListener.SESSION_ID),
+				properties.get(RequestDTOMessageListener.TRANSACTION_ID));
 		msg.setEventTypeCd(EventTypeCd.EVENT_IN_PROGRESS);
 		msg.setLogLevel(LogLevel.SYSTEM);
-		msg.setServiceId(appConfig.getServiceId());
-		msg.setClassificationLevel(EnumUtil.safeValueOf(ClassificationLevel.class, appConfig.getClassificationLevel()));
-		msg.setEventName("Notification System Error");
+		msg.setEventName(eventName);
 		msg.setPayload(e.toString());
-		msg.setExecutionDateTime(Instant.now());
 		msg.setEventSummary(e.getMessage());
-		msg.setMicroServiceId(appConfig.getMicroServiceId());
-		msg.setSessionId(UUID.randomUUID());
 		MessageId mId = null;
 		try {
 			mId = sendLog(msg, properties);
@@ -155,6 +161,44 @@ public class MessageSender {
 			log.error(e1);
 		}
 		return mId;
+	}
+
+	/**
+	 * Builds the core of a MachineLogDTO using String arguments for the session and transaction Ids.
+	 * Populates all auto-config values
+	 * @param sessionId
+	 * @param transactionId
+	 * @return
+	 */
+	public MachineLogDTO generateBaseMachineLogWithStrings(String sessionId, String transactionId) {
+		UUID sessId = null;
+		UUID transId = null;
+		if (!StringUtil.isEmpty(sessionId)) {
+			sessId = UUID.fromString(sessionId);
+		}
+		if (!StringUtil.isEmpty(transactionId)) {
+			transId = UUID.fromString(transactionId);
+		}
+		return generateBaseMachineLog(sessId, transId);
+	}
+
+	/**
+	 * Builds the core of a MachineLogDTO using UUID arguments for the session and transaction Ids.
+	 * Populates all auto-config values
+	 * @param sessionId
+	 * @param transactionId
+	 * @return
+	 */
+	public MachineLogDTO generateBaseMachineLog(UUID sessionId, UUID transactionId) {
+		MachineLogDTO msg = new MachineLogDTO();
+		msg.setServiceId(appConfig.getServiceId());
+		msg.setEnvironment(EnumUtil.safeValueOf(Environment.class, appConfig.getEnvironmentCd()));
+		msg.setClassificationLevel(EnumUtil.safeValueOf(ClassificationLevel.class, appConfig.getClassificationLevel()));
+		msg.setMicroServiceId(appConfig.getMicroServiceId());
+		msg.setExecutionDateTime(Instant.now());
+		msg.setSessionId(sessionId);
+		msg.setUiTransactionId(transactionId);
+		return msg;
 	}
 
 	/**
@@ -215,5 +259,22 @@ public class MessageSender {
 	public Producer<byte[]> buildProducer(String topicUri, String topicName, Map<String, String> properties)
 			throws PulsarClientException {
 		return client.newProducer().topic(topicUri).producerName(topicName).properties(properties).create();
+	}
+
+	/**
+	 * Manage extracting shared Properties from the RequestDTO for passing around
+	 * the async topics.
+	 * @param req
+	 * @return
+	 */
+	public static Map<String, String> extractProps(RequestDTO req) {
+		Map<String, String> props = new HashMap<>();
+		if (req.getSessionId() != null) {
+			props.put(RequestDTOMessageListener.SESSION_ID, req.getSessionId().toString());
+		}
+		if (req.getUiTransactionId() != null) {
+			props.put(RequestDTOMessageListener.TRANSACTION_ID, req.getUiTransactionId().toString());
+		}
+		return props;
 	}
 }

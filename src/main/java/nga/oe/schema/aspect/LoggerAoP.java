@@ -1,6 +1,5 @@
 package nga.oe.schema.aspect;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -14,14 +13,15 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-import com.siliconmtn.data.util.EnumUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.siliconmtn.data.text.StringUtil;
 
 import lombok.extern.log4j.Log4j2;
 import nga.oe.config.ApplicationConfig;
 import nga.oe.pulsar.MessageSender;
 import nga.oe.pulsar.RequestDTOMessageListener;
 import nga.oe.schema.vo.MachineLogDTO;
-import nga.oe.schema.vo.MachineLogDTO.ClassificationLevel;
+import nga.oe.schema.vo.MachineLogDTO.EventTypeCd;
 import nga.oe.schema.vo.MachineLogDTO.LogLevel;
 import nga.oe.schema.vo.RequestDTO;
 
@@ -65,9 +65,15 @@ public class LoggerAoP {
 		if (dto.getUiTransactionId() != null)
 			props.put(RequestDTOMessageListener.TRANSACTION_ID, dto.getUiTransactionId().toString());
 
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.findAndRegisterModules();
+		Object data = null;
+		if(!StringUtil.isEmpty(dto.getData())) {
+	        data = mapper.readValue(dto.getData(), Map.class);
+		}
 		// Generate and send the Starting MachineLog Message with initial Payload of the
 		// Request Data value.
-		MachineLogDTO msg = generateMessage(dto, "START JOB + " + System.currentTimeMillis());
+		MachineLogDTO msg = generateMessage(dto, data, "START JOB + " + System.currentTimeMillis(),  EventTypeCd.EVENT_START);
 		sender.sendLog(msg, props);
 
 		log.info("Executing {}.{} with argument: {}", targetClass, targetMethod, dto);
@@ -79,24 +85,21 @@ public class LoggerAoP {
 
 		// Generate and send the end MachineLog Message with payload of the response
 		// value.
-		msg = generateMessage(dto, "END JOB + " + System.currentTimeMillis());
-		msg.setPayload(response);
+		msg = generateMessage(dto, response, "END JOB + " + System.currentTimeMillis(), EventTypeCd.EVENT_END);
 		sender.sendLog(msg, props);
 
 		return response;
 	}
 
-	MachineLogDTO generateMessage(RequestDTO dto, String eventSummary) {
-		MachineLogDTO msg = new MachineLogDTO();
+	MachineLogDTO generateMessage(RequestDTO dto, Object payload, String eventSummary, EventTypeCd eventTypeCd) {
+		MachineLogDTO msg = sender.generateBaseMachineLog(dto.getSessionId(), dto.getUiTransactionId());
+		msg.setEventTypeCd(eventTypeCd);
 		msg.setLogLevel(LogLevel.SYSTEM);
-		msg.setServiceId(config.getServiceId());
-		msg.setClassificationLevel(EnumUtil.safeValueOf(ClassificationLevel.class, config.getClassificationLevel()));
-		msg.setEventName("Notification System Log");
-		msg.setExecutionDateTime(Instant.now());
+		msg.setEventName("System Log");
 		msg.setEventSummary(eventSummary);
-		msg.setMicroServiceId(config.getMicroServiceId());
 		msg.setSessionId(dto.getSessionId());
-		msg.setPayload(dto.getData());
+		msg.setUiTransactionId(dto.getUiTransactionId());
+		msg.setPayload(payload);
 		return msg;
 	}
 }

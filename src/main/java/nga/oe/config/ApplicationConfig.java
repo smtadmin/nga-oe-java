@@ -19,4 +19,5 @@ public class ApplicationConfig {
 	private String serviceId;
 	private String classificationLevel;
 	private String microServiceId;
+	private String environmentCd;
 }

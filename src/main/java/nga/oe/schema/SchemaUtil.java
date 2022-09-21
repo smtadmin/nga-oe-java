@@ -58,7 +58,7 @@ public class SchemaUtil<T extends Parseable> {
 	// Members
 	ObjectMapper mapper;
 
-	SchemaUtil() {
+	public SchemaUtil() {
 		this.mapper = new ObjectMapper();
 		this.mapper.findAndRegisterModules();
 	}
