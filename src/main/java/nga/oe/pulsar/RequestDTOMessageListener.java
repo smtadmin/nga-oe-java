@@ -37,7 +37,7 @@ import nga.oe.service.RequestServiceImpl;
 public class RequestDTOMessageListener<T extends RequestServiceImpl<?>> implements MessageListener<byte[]> {
 
 	public static final String SESSION_ID = "sessionId";
-	public static final String TRANSACTION_ID = "transactionId";
+	public static final String TRANSACTION_ID = "uiTransactionId";
 	private static final long serialVersionUID = 2341934156383412579L;
 
 	@Autowired
@@ -59,7 +59,7 @@ public class RequestDTOMessageListener<T extends RequestServiceImpl<?>> implemen
 				transactionId = UUID.fromString(msg.getProperty(TRANSACTION_ID));
 			}
 
-			RequestDTO req = new RequestDTO(node.get("schema").toString(), node.get("data").toString(), null,
+			RequestDTO req = new RequestDTO(node.get("schema").asText(), node.get("data").asText(), null,
 					transactionId);
 			service.processRequest(req);
 			consumer.acknowledge(msg);

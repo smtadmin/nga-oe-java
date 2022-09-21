@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.doThrow;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.UUID;
 
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
@@ -18,6 +20,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import nga.oe.schema.exception.AppSchemaException;
 import nga.oe.schema.vo.RequestDTO;
 import nga.oe.service.RequestServiceImpl;
 
@@ -115,6 +118,16 @@ class RequestDTOMessageListenerTest {
 	@Test
 	void messageValidationTest() {
 		Mockito.when(msg.getData()).thenReturn(json.getBytes());
+		assertDoesNotThrow(() -> listener.received(consumer, msg));
+	}
+
+	@Test
+	void messageValidationTestWithProps() throws AppSchemaException {
+		UUID tId = UUID.randomUUID();
+		Mockito.when(msg.hasProperty(RequestDTOMessageListener.TRANSACTION_ID)).thenReturn(true);
+		Mockito.when(msg.getProperty(RequestDTOMessageListener.TRANSACTION_ID)).thenReturn(tId.toString());
+		Mockito.when(msg.getData()).thenReturn(json.getBytes());
+		Mockito.when(service.processRequest(dto)).thenReturn(Collections.singletonList(dto));
 		assertDoesNotThrow(() -> listener.received(consumer, msg));
 	}
 
