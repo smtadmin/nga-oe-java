@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.siliconmtn.data.util.EntityIgnore;
 import com.siliconmtn.io.api.base.BaseDTO;
 
 import lombok.AllArgsConstructor;
@@ -14,10 +15,11 @@ import lombok.ToString;
 import nga.oe.schema.Parseable;
 
 /**
- * <b>Title:</b> NotificationDTO.java <b>Project:</b> Notification Retrieval
+ * <b>Title:</b> NotificationDTO.java
  * <b>Description:</b> Notification DTO used to get information from the request
  *
- * <b>Copyright:</b> 2022 <b>Company:</b> Silicon Mountain Technologies
+ * <b>Copyright:</b> 2022
+ * <b>Company:</b> Silicon Mountain Technologies
  * 
  * @author Eric Damschroder
  * @version 1.0
@@ -33,14 +35,14 @@ import nga.oe.schema.Parseable;
 public class NotificationDTO extends Parseable implements BaseDTO {
 
 	private static final long serialVersionUID = 6130717659567525565L;
-
+	
 	private UUID notificationId = UUID.randomUUID();
 
 	private String severityCode;
-
+	
 	private UUID ownerId;
 
-	private UUID serviceId;
+	private String serviceId;
 
 	private UUID groupId;
 
@@ -48,7 +50,7 @@ public class NotificationDTO extends Parseable implements BaseDTO {
 
 	private String message;
 
-	private UUID microserviceId;
+	private String microserviceId;
 
 	private UUID sessionId;
 
@@ -64,6 +66,13 @@ public class NotificationDTO extends Parseable implements BaseDTO {
 
 	private String clearanceLevel;
 
-	private List<NotificationTypeDTO> notificationType = new ArrayList<>();
+	private List<UUID> emailIds = new ArrayList<>();
+	
+	private List<UUID> smsIds = new ArrayList<>();
+	
+	private boolean actionable;
 
+	@EntityIgnore
+	private List<NotificationTypeXrDTO> notificationType = new ArrayList<>();
+	
 }
