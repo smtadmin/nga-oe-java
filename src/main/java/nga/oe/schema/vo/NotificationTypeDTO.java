@@ -9,8 +9,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * <b>Title:</b> NotificationType.java
- * <b>Project:</b> Notification Management
+ * <b>Title:</b> NotificationTypeDTO.java
  * <b>Description:</b> Notification Type entity used to store notification types in the databse
  *
  * <b>Copyright:</b> 2022
@@ -27,7 +26,7 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-public class NotificationTypeDTO  implements BaseDTO {
+public class NotificationTypeDTO implements BaseDTO {
 	
 	public enum NotificationType {alert, gumdrop, email, sms}
 
