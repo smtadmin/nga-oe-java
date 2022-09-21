@@ -96,7 +96,6 @@ public class MessageSender {
 			Resource resource = new ClassPathResource("machine_feedback_schema.json");
 			JsonElement el = JsonParser.parseString(asString(resource));
 			schema = gson.toJson(el);
-			log.info(schema);
 		} catch (Exception e) {
 			log.error(e);
 		}
