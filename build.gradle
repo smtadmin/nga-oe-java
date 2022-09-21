@@ -69,6 +69,10 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.apache.pulsar/pulsar-client
 	implementation 'org.apache.pulsar:pulsar-client:2.10.1'
 
+	// GSON Import
+	implementation 'com.google.code.gson:gson:2.9.1'
+
+	// Space Libs Import
 	implementation 'com.siliconmtn:spacelibs-java:1.2.3-SNAPSHOT'
 
 }
