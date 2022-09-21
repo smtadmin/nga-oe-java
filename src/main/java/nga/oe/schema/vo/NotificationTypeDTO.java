@@ -1,7 +1,5 @@
 package nga.oe.schema.vo;
 
-import java.util.UUID;
-
 import com.siliconmtn.io.api.base.BaseDTO;
 
 import lombok.AllArgsConstructor;
@@ -11,9 +9,9 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * <b>Title:</b> NotificationTypeDTO.java
- * <b>Project:</b> Notification Retrieval
- * <b>Description:</b> Notification DTO used to pull information from the request
+ * <b>Title:</b> NotificationType.java
+ * <b>Project:</b> Notification Management
+ * <b>Description:</b> Notification Type entity used to store notification types in the databse
  *
  * <b>Copyright:</b> 2022
  * <b>Company:</b> Silicon Mountain Technologies
@@ -29,15 +27,12 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-public class NotificationTypeDTO implements BaseDTO {
-
-	public enum NotificationType {alert, gumdrop, email, sms}
-	private static final long serialVersionUID = 37184217119585672L;
-
-	private UUID notificationTypeXrId = UUID.randomUUID();
-
-	private NotificationType notificationTypeCode;
+public class NotificationTypeDTO  implements BaseDTO {
 	
-	private UUID notificationId;
+	public enum NotificationType {alert, gumdrop, email, sms}
+
+	private static final long serialVersionUID = -1984168339314226965L;
+
+	private String notificationTypeCode;
 	
 }
