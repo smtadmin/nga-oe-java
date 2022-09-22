@@ -118,17 +118,9 @@ public class MessageSender {
 	 * @throws PulsarClientException
 	 */
 	public MessageId sendLog(MachineLogDTO mLog, Map<String, String> properties) throws PulsarClientException {
-		TopicConfig lConfig = config.getTopics().get(LOGGING_TOPIC);
 		MessageId mId = null;
 		if (mLog.isValid()) {
-			try (Producer<byte[]> p = buildProducer(lConfig, properties)) {
-				String json = mapper.writeValueAsString(mLog);
-				log.info(json);
-				RequestDTO rdto = new RequestDTO(schema, json);
-				mId = p.send(mapper.writeValueAsBytes(rdto));
-			} catch (JsonProcessingException e) {
-				log.error("TODO", e);
-			}
+			sendRequestDTOMessage(mLog, schema, LOGGING_TOPIC, properties);
 		} else {
 			log.error(mLog);
 		}
@@ -231,12 +223,12 @@ public class MessageSender {
 	 * @param notification
 	 * @throws PulsarClientException
 	 */
-	public MessageId sendRequestDTOMessage(Object msg, String schema, String topic, Map<String, String> properties) throws PulsarClientException {
+	public MessageId sendRequestDTOMessage(Object msg, String reqSchema, String topic, Map<String, String> properties) throws PulsarClientException {
 		TopicConfig tConfig = config.getTopics().get(topic);
 		MessageId mId = null;
 		try(Producer<byte[]> p = buildProducer(tConfig, properties)) {
 			String json = mapper.writeValueAsString(msg);
-			RequestDTO rdto = new RequestDTO(schema, json);
+			RequestDTO rdto = new RequestDTO(reqSchema, json);
 			mId = p.send(mapper.writeValueAsBytes(rdto));
 		} catch (JsonProcessingException e) {
 			log.error("TODO", e);
