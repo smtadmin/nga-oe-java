@@ -125,7 +125,7 @@ public class MessageSender {
 		TopicConfig lConfig = config.getTopics().get(LOGGING_TOPIC);
 		MessageId mId = null;
 		if (mLog.isValid()) {
-			try (Producer<byte[]> p = buildProducer(lConfig.getTopicUri(), lConfig.getName(), properties)) {
+			try (Producer<byte[]> p = buildProducer(lConfig, properties)) {
 				String json = mapper.writeValueAsString(mLog);
 				log.info(json);
 				RequestDTO rdto = new RequestDTO(schema, json);
@@ -211,8 +211,11 @@ public class MessageSender {
 	public MessageId sendMessage(Object msg, String topic, Map<String, String> properties) throws PulsarClientException {
 		TopicConfig tConfig = config.getTopics().get(topic);
 		MessageId mId = null;
+		
+		// If an incorrect topic was supplied just return here
+		if (tConfig == null) return mId;
 
-		try (Producer<byte[]> p = buildProducer(tConfig.getTopicUri(), tConfig.getName(), properties)) {
+		try (Producer<byte[]> p = buildProducer(tConfig, properties)) {
 			String json;
 			try {
 				json = mapper.writeValueAsString(msg);
@@ -235,7 +238,7 @@ public class MessageSender {
 		MessageId mId = null;
 		TopicConfig bConfig = config.getTopics().get(BANNER_TOPIC);
 
-		try (Producer<byte[]> p = buildProducer(bConfig.getTopicUri(), bConfig.getName(), properties)) {
+		try (Producer<byte[]> p = buildProducer(bConfig, properties)) {
 			String json;
 			try {
 				json = mapper.writeValueAsString(bmMsg);
@@ -259,7 +262,7 @@ public class MessageSender {
 		TopicConfig gConfig = config.getTopics().get(GUMDROP_TOPIC);
 		MessageId mId = null;
 
-		try (Producer<byte[]> p = buildProducer(gConfig.getTopicUri(), gConfig.getName(), properties)) {
+		try (Producer<byte[]> p = buildProducer(gConfig, properties)) {
 			String json;
 			try {
 				json = mapper.writeValueAsString(gdMsg);
@@ -280,9 +283,9 @@ public class MessageSender {
 	 * @return
 	 * @throws PulsarClientException
 	 */
-	public Producer<byte[]> buildProducer(String topicUri, String topicName, Map<String, String> properties)
+	public Producer<byte[]> buildProducer(TopicConfig topicConfig, Map<String, String> properties)
 			throws PulsarClientException {
-		return client.newProducer().topic(topicUri).producerName(topicName).properties(properties).create();
+		return client.newProducer().topic(topicConfig.getTopicUri()).producerName(topicConfig.getName()).properties(properties).create();
 	}
 
 	/**
