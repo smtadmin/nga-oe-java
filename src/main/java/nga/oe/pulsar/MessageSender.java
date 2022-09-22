@@ -226,6 +226,10 @@ public class MessageSender {
 	public MessageId sendRequestDTOMessage(Object msg, String reqSchema, String topic, Map<String, String> properties) throws PulsarClientException {
 		TopicConfig tConfig = config.getTopics().get(topic);
 		MessageId mId = null;
+		
+		// If an incorrect topic was supplied just return here
+		if (tConfig == null) return mId;
+
 		try(Producer<byte[]> p = buildProducer(tConfig, properties)) {
 			String json = mapper.writeValueAsString(msg);
 			RequestDTO rdto = new RequestDTO(reqSchema, json);
