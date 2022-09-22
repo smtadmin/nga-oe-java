@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.log4j.Log4j2;
+import nga.oe.schema.SchemaUtil;
 import nga.oe.schema.vo.RequestDTO;
 import nga.oe.service.RequestServiceImpl;
 
@@ -50,6 +51,10 @@ public class RequestDTOMessageListener<T extends RequestServiceImpl<?>> implemen
 		objectMapper.findAndRegisterModules();
 	}
 
+	/**
+	 * Handles async receipt of a Pulsar Message, converts to a RequestDTO and
+	 * forwards to the linked Service.
+	 */
 	@Override
 	public void received(Consumer<byte[]> consumer, Message<byte[]> msg) {
 		try {
@@ -59,8 +64,9 @@ public class RequestDTOMessageListener<T extends RequestServiceImpl<?>> implemen
 				transactionId = UUID.fromString(msg.getProperty(TRANSACTION_ID));
 			}
 
-			RequestDTO req = new RequestDTO(node.get("schema").asText(), node.get("data").asText(), null,
-					transactionId);
+			RequestDTO req = new RequestDTO(SchemaUtil.extractData(node.get("schema")),
+					SchemaUtil.extractData(node.get("data")), null, transactionId);
+
 			service.processRequest(req);
 			consumer.acknowledge(msg);
 		} catch (Exception e) {
