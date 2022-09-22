@@ -35,8 +35,6 @@ import com.siliconmtn.pulsar.TopicConfig;
 
 import lombok.extern.log4j.Log4j2;
 import nga.oe.config.ApplicationConfig;
-import nga.oe.schema.vo.BannerMessageDTO;
-import nga.oe.schema.vo.GumdropMessageDTO;
 import nga.oe.schema.vo.MachineLogDTO;
 import nga.oe.schema.vo.MachineLogDTO.ClassificationLevel;
 import nga.oe.schema.vo.MachineLogDTO.Environment;
@@ -65,8 +63,6 @@ import nga.oe.schema.vo.RequestDTO;
 public class MessageSender {
 
 	public static final String LOGGING_TOPIC = "loggingTopic";
-	public static final String BANNER_TOPIC = "bannerTopic";
-	public static final String GUMDROP_TOPIC = "gumdropTopic";
 
 	@Autowired
 	ApplicationConfig appConfig;
@@ -219,53 +215,6 @@ public class MessageSender {
 			String json;
 			try {
 				json = mapper.writeValueAsString(msg);
-				log.info(json);
-				mId = p.send(json.getBytes());
-			} catch (JsonProcessingException e) {
-				log.error("TODO", e);
-			}
-		}
-		return mId;
-	}
-
-	/**
-	 * Drop a message into the Banner Topic
-	 * 
-	 * @param notification
-	 * @throws PulsarClientException
-	 */
-	public MessageId sendBanner(BannerMessageDTO bmMsg, Map<String, String> properties) throws PulsarClientException {
-		MessageId mId = null;
-		TopicConfig bConfig = config.getTopics().get(BANNER_TOPIC);
-
-		try (Producer<byte[]> p = buildProducer(bConfig, properties)) {
-			String json;
-			try {
-				json = mapper.writeValueAsString(bmMsg);
-				log.info(json);
-				mId = p.send(json.getBytes());
-			} catch (JsonProcessingException e) {
-				log.error("TODO", e);
-			}
-		}
-		return mId;
-	}
-
-	/**
-	 * Drop a message to the Gumdrop Topic
-	 * 
-	 * @param gdMsg
-	 * @return
-	 * @throws PulsarClientException
-	 */
-	public MessageId sendGumdrop(GumdropMessageDTO gdMsg, Map<String, String> properties) throws PulsarClientException {
-		TopicConfig gConfig = config.getTopics().get(GUMDROP_TOPIC);
-		MessageId mId = null;
-
-		try (Producer<byte[]> p = buildProducer(gConfig, properties)) {
-			String json;
-			try {
-				json = mapper.writeValueAsString(gdMsg);
 				log.info(json);
 				mId = p.send(json.getBytes());
 			} catch (JsonProcessingException e) {
