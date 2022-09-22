@@ -35,14 +35,15 @@ import nga.oe.schema.vo.RequestDTO;
 @Component
 public class SchemaUtil<T extends Parseable> {
 
+	public static final String BASE_SCHEMA_KEY = "baseSchema";
+
 	/**
 	 * Defines the available error messages for this utility
 	 */
 	public enum ErrorType {
 		INVALID_DATA_PATH("data"), INVALID_SCHEMA_PATH("schema"),
 		INVALID_DATA_MSG("Data could not be parsed into JsonNode"), INVALID_SCHEMA_MSG("Provided Schema was invalid."),
-		BASE_SCHEMA_KEY("baseSchema"), INVALID_SCHEMA_ERR_MSG("Invalid Schema Data"),
-		INVALID_DATA_ERR_MSG("Invalid Payload Data");
+		INVALID_SCHEMA_ERR_MSG("Invalid Schema Data"), INVALID_DATA_ERR_MSG("Invalid Payload Data");
 
 		String message;
 
@@ -61,6 +62,24 @@ public class SchemaUtil<T extends Parseable> {
 	public SchemaUtil() {
 		this.mapper = new ObjectMapper();
 		this.mapper.findAndRegisterModules();
+	}
+
+	/**
+	 * Inspect and call appropriate string extraction method on the given jsonNode.
+	 * 
+	 * @param jsonNode
+	 * @return
+	 */
+	public static String extractData(JsonNode jsonNode) {
+		String res = null;
+		if (jsonNode != null) {
+			if (jsonNode.isValueNode()) {
+				res = jsonNode.asText();
+			} else {
+				res = jsonNode.toString();
+			}
+		}
+		return res;
 	}
 
 	/**
@@ -136,7 +155,7 @@ public class SchemaUtil<T extends Parseable> {
 	 * @throws IllegalArgumentException
 	 */
 	public T parseCustom(JsonNode node, Class<T> bean) throws JsonProcessingException, IllegalArgumentException {
-		T dto = mapper.treeToValue(node.get(ErrorType.BASE_SCHEMA_KEY.getMessage()), bean);
+		T dto = mapper.treeToValue(node.get(BASE_SCHEMA_KEY), bean);
 		extractExtras(node, dto, "");
 		return dto;
 	}
@@ -153,9 +172,9 @@ public class SchemaUtil<T extends Parseable> {
 		Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
 		while (fields.hasNext()) {
 			Map.Entry<String, JsonNode> field = fields.next();
-			if (!ErrorType.BASE_SCHEMA_KEY.getMessage().equals(field.getKey())) {
+			if (!BASE_SCHEMA_KEY.equals(field.getKey())) {
 				if (field.getValue().isValueNode()) {
-					dto.getUnMappedData().put(buildKey(parentKey, field.getKey()), field.getValue().asText());
+					dto.getUnMappedData().put(buildKey(parentKey, field.getKey()), extractData(field.getValue()));
 				} else {
 					extractExtras(field.getValue(), dto, buildKey(parentKey, field.getKey()));
 				}
@@ -173,7 +192,7 @@ public class SchemaUtil<T extends Parseable> {
 		T dto = null;
 		try {
 			JsonNode node = convertNode(req);
-			if (node.has(ErrorType.BASE_SCHEMA_KEY.getMessage())) {
+			if (node.has(BASE_SCHEMA_KEY)) {
 				dto = parseCustom(node, bean);
 			} else {
 				dto = mapper.treeToValue(node, bean);
