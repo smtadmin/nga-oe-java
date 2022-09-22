@@ -223,6 +223,26 @@ public class MessageSender {
 		}
 		return mId;
 	}
+	
+
+
+	/**
+	 * Create a request DTO and drop it into the queue
+	 * @param notification
+	 * @throws PulsarClientException
+	 */
+	public MessageId sendRequestDTOMessage(Object msg, String schema, String topic, Map<String, String> properties) throws PulsarClientException {
+		TopicConfig tConfig = config.getTopics().get(topic);
+		MessageId mId = null;
+		try(Producer<byte[]> p = buildProducer(tConfig, properties)) {
+			String json = mapper.writeValueAsString(msg);
+			RequestDTO rdto = new RequestDTO(schema, json);
+			mId = p.send(mapper.writeValueAsBytes(rdto));
+		} catch (JsonProcessingException e) {
+			log.error("TODO", e);
+		}
+		return mId;
+	}
 
 	/**
 	 * Builds a Producer for given topicUri and name;
