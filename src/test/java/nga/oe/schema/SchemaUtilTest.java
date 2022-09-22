@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,6 +49,27 @@ class SchemaUtilTest {
 	Resource customResource = new ClassPathResource("oe-machine-feedback-data.sample.custom.json");
 
 	RequestDTO dto;
+
+	@Test
+	void extractDataNull() {
+		assertNull(SchemaUtil.extractData(null));
+	}
+
+	@Test
+	void extractDataValueNode() {
+		JsonNode n = mock(JsonNode.class);
+		when(n.isValueNode()).thenReturn(true);
+		when(n.asText()).thenReturn("Hello World");
+		assertEquals("Hello World", SchemaUtil.extractData(n));
+	}
+
+	@Test
+	void extractDataNonValueNode() {
+		JsonNode n = mock(JsonNode.class);
+		when(n.isValueNode()).thenReturn(false);
+		when(n.toString()).thenReturn("Hello World");
+		assertEquals("Hello World", SchemaUtil.extractData(n));
+	}
 
 	@Test
 	void schemaServiceHappyPathTest() throws AppSchemaException, IOException {
@@ -137,7 +160,7 @@ class SchemaUtilTest {
 		MachineLogDTO logDto = service.convertRequest(dto, MachineLogDTO.class);
 		assertNotNull(logDto);
 		assertEquals(logDto.getUserId().toString(),
-				node.get("data").get(ErrorType.BASE_SCHEMA_KEY.getMessage()).get("userId").asText());
+				node.get("data").get(SchemaUtil.BASE_SCHEMA_KEY).get("userId").asText());
 	}
 
 	@Test
@@ -151,7 +174,7 @@ class SchemaUtilTest {
 		MachineLogDTO logDto = service.convertRequest(dto, MachineLogDTO.class);
 		assertNotNull(logDto);
 		assertEquals(logDto.getUserId().toString(),
-				node.get("data").get(ErrorType.BASE_SCHEMA_KEY.getMessage()).get("userId").asText());
+				node.get("data").get(SchemaUtil.BASE_SCHEMA_KEY).get("userId").asText());
 		assertFalse(logDto.getUnMappedData().isEmpty());
 		assertEquals(3, logDto.getUnMappedData().size());
 	}
