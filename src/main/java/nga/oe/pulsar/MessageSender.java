@@ -35,8 +35,6 @@ import com.siliconmtn.pulsar.TopicConfig;
 
 import lombok.extern.log4j.Log4j2;
 import nga.oe.config.ApplicationConfig;
-import nga.oe.schema.vo.BannerMessageDTO;
-import nga.oe.schema.vo.GumdropMessageDTO;
 import nga.oe.schema.vo.MachineLogDTO;
 import nga.oe.schema.vo.MachineLogDTO.ClassificationLevel;
 import nga.oe.schema.vo.MachineLogDTO.Environment;
@@ -65,8 +63,6 @@ import nga.oe.schema.vo.RequestDTO;
 public class MessageSender {
 
 	public static final String LOGGING_TOPIC = "loggingTopic";
-	public static final String BANNER_TOPIC = "bannerTopic";
-	public static final String GUMDROP_TOPIC = "gumdropTopic";
 
 	@Autowired
 	ApplicationConfig appConfig;
@@ -122,17 +118,9 @@ public class MessageSender {
 	 * @throws PulsarClientException
 	 */
 	public MessageId sendLog(MachineLogDTO mLog, Map<String, String> properties) throws PulsarClientException {
-		TopicConfig lConfig = config.getTopics().get(LOGGING_TOPIC);
 		MessageId mId = null;
 		if (mLog.isValid()) {
-			try (Producer<byte[]> p = buildProducer(lConfig.getTopicUri(), lConfig.getName(), properties)) {
-				String json = mapper.writeValueAsString(mLog);
-				log.info(json);
-				RequestDTO rdto = new RequestDTO(schema, json);
-				mId = p.send(mapper.writeValueAsBytes(rdto));
-			} catch (JsonProcessingException e) {
-				log.error("TODO", e);
-			}
+			sendRequestDTOMessage(mLog, schema, LOGGING_TOPIC, properties);
 		} else {
 			log.error(mLog);
 		}
@@ -202,19 +190,23 @@ public class MessageSender {
 	}
 
 	/**
-	 * Drop a message into the Banner Topic
+	 * Drop a message to the supplied Topic
 	 * 
-	 * @param notification
+	 * @param gdMsg
+	 * @return
 	 * @throws PulsarClientException
 	 */
-	public MessageId sendBanner(BannerMessageDTO bmMsg, Map<String, String> properties) throws PulsarClientException {
+	public MessageId sendMessage(Object msg, String topic, Map<String, String> properties) throws PulsarClientException {
+		TopicConfig tConfig = config.getTopics().get(topic);
 		MessageId mId = null;
-		TopicConfig bConfig = config.getTopics().get(BANNER_TOPIC);
+		
+		// If an incorrect topic was supplied just return here
+		if (tConfig == null) return mId;
 
-		try (Producer<byte[]> p = buildProducer(bConfig.getTopicUri(), bConfig.getName(), properties)) {
+		try (Producer<byte[]> p = buildProducer(tConfig, properties)) {
 			String json;
 			try {
-				json = mapper.writeValueAsString(bmMsg);
+				json = mapper.writeValueAsString(msg);
 				log.info(json);
 				mId = p.send(json.getBytes());
 			} catch (JsonProcessingException e) {
@@ -223,27 +215,27 @@ public class MessageSender {
 		}
 		return mId;
 	}
+	
+
 
 	/**
-	 * Drop a message to the Gumdrop Topic
-	 * 
-	 * @param gdMsg
-	 * @return
+	 * Create a request DTO and drop it into the queue
+	 * @param notification
 	 * @throws PulsarClientException
 	 */
-	public MessageId sendGumdrop(GumdropMessageDTO gdMsg, Map<String, String> properties) throws PulsarClientException {
-		TopicConfig gConfig = config.getTopics().get(GUMDROP_TOPIC);
+	public MessageId sendRequestDTOMessage(Object msg, String reqSchema, String topic, Map<String, String> properties) throws PulsarClientException {
+		TopicConfig tConfig = config.getTopics().get(topic);
 		MessageId mId = null;
+		
+		// If an incorrect topic was supplied just return here
+		if (tConfig == null) return mId;
 
-		try (Producer<byte[]> p = buildProducer(gConfig.getTopicUri(), gConfig.getName(), properties)) {
-			String json;
-			try {
-				json = mapper.writeValueAsString(gdMsg);
-				log.info(json);
-				mId = p.send(json.getBytes());
-			} catch (JsonProcessingException e) {
-				log.error("TODO", e);
-			}
+		try(Producer<byte[]> p = buildProducer(tConfig, properties)) {
+			String json = mapper.writeValueAsString(msg);
+			RequestDTO rdto = new RequestDTO(reqSchema, json);
+			mId = p.send(mapper.writeValueAsBytes(rdto));
+		} catch (JsonProcessingException e) {
+			log.error("TODO", e);
 		}
 		return mId;
 	}
@@ -256,9 +248,9 @@ public class MessageSender {
 	 * @return
 	 * @throws PulsarClientException
 	 */
-	public Producer<byte[]> buildProducer(String topicUri, String topicName, Map<String, String> properties)
+	public Producer<byte[]> buildProducer(TopicConfig topicConfig, Map<String, String> properties)
 			throws PulsarClientException {
-		return client.newProducer().topic(topicUri).producerName(topicName).properties(properties).create();
+		return client.newProducer().topic(topicConfig.getTopicUri()).producerName(topicConfig.getName()).properties(properties).create();
 	}
 
 	/**
