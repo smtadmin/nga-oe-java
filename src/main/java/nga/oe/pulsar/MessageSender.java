@@ -202,6 +202,30 @@ public class MessageSender {
 	}
 
 	/**
+	 * Drop a message to the supplied Topic
+	 * 
+	 * @param gdMsg
+	 * @return
+	 * @throws PulsarClientException
+	 */
+	public MessageId sendMessage(Object msg, String topic, Map<String, String> properties) throws PulsarClientException {
+		TopicConfig tConfig = config.getTopics().get(topic);
+		MessageId mId = null;
+
+		try (Producer<byte[]> p = buildProducer(tConfig.getTopicUri(), tConfig.getName(), properties)) {
+			String json;
+			try {
+				json = mapper.writeValueAsString(msg);
+				log.info(json);
+				mId = p.send(json.getBytes());
+			} catch (JsonProcessingException e) {
+				log.error("TODO", e);
+			}
+		}
+		return mId;
+	}
+
+	/**
 	 * Drop a message into the Banner Topic
 	 * 
 	 * @param notification
