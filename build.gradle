@@ -73,7 +73,7 @@ dependencies {
 	implementation 'com.google.code.gson:gson:2.9.1'
 
 	// Space Libs Import
-	implementation 'com.siliconmtn:spacelibs-java:1.2.3-SNAPSHOT'
+	implementation 'com.siliconmtn:spacelibs-java:1.2.4-SNAPSHOT'
 
 }
 
