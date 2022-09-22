@@ -18,6 +18,7 @@ import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.ProducerBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
+import org.apache.pulsar.client.api.PulsarClientException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -30,7 +31,6 @@ import com.siliconmtn.pulsar.PulsarConfig;
 import com.siliconmtn.pulsar.TopicConfig;
 
 import nga.oe.config.ApplicationConfig;
-import nga.oe.schema.vo.BannerMessageDTO;
 import nga.oe.schema.vo.GumdropMessageDTO;
 import nga.oe.schema.vo.MachineLogDTO;
 import nga.oe.schema.vo.MachineLogDTO.ClassificationLevel;
@@ -265,7 +265,7 @@ class MessageSenderTest {
 		sender = new MessageSender(mapper);
 		sender.config = new PulsarConfig();
 		sender.config.setTopics(new HashMap<>());
-		sender.config.getTopics().put(MessageSender.GUMDROP_TOPIC, new TopicConfig());
+		sender.config.getTopics().put("gumdrop", new TopicConfig());
 		sender.client = client;
 		ProducerBuilder<byte[]> pb = Mockito.mock(ProducerBuilder.class);
 		Mockito.when(client.newProducer()).thenReturn(pb);
@@ -274,38 +274,7 @@ class MessageSenderTest {
 		Mockito.when(pb.producerName(any())).thenReturn(pb);
 		Mockito.when(pb.create()).thenReturn(producer);
 		Map<String, String> props = new HashMap<>();
-		assertNotNull(sender.sendGumdrop(msg, props));
-	}
-
-	/**
-	 * Tests the notifications
-	 * 
-	 * @throws Exception
-	 */
-	@SuppressWarnings("unchecked")
-	@Test
-	void testSendNotificationBanner() throws Exception {
-		BannerMessageDTO msg = new BannerMessageDTO();
-		msg.setMsg("Hello World");
-		msg.setState("success");
-
-		producer = Mockito.mock(Producer.class);
-		client = Mockito.mock(PulsarClient.class);
-		Mockito.when(producer.send(any())).thenReturn(MessageId.latest);
-
-		sender = new MessageSender(mapper);
-		sender.config = new PulsarConfig();
-		sender.config.setTopics(new HashMap<>());
-		sender.config.getTopics().put(MessageSender.BANNER_TOPIC, new TopicConfig());
-		sender.client = client;
-		ProducerBuilder<byte[]> pb = Mockito.mock(ProducerBuilder.class);
-		Mockito.when(client.newProducer()).thenReturn(pb);
-		Mockito.when(pb.topic(any())).thenReturn(pb);
-		Mockito.when(pb.properties(anyMap())).thenReturn(pb);
-		Mockito.when(pb.producerName(any())).thenReturn(pb);
-		Mockito.when(pb.create()).thenReturn(producer);
-		Map<String, String> props = new HashMap<>();
-		assertNotNull(sender.sendBanner(msg, props));
+		assertNotNull(sender.sendMessage(msg, "gumdrop", props));
 	}
 
 	@Test
@@ -316,6 +285,16 @@ class MessageSenderTest {
 		Map<String, String> props = MessageSender.extractProps(dto);
 		assertEquals(dto.getSessionId().toString(), props.get(RequestDTOMessageListener.SESSION_ID));
 		assertEquals(dto.getUiTransactionId().toString(), props.get(RequestDTOMessageListener.TRANSACTION_ID));
+	}
+
+	@Test
+	void testNoTopic() throws PulsarClientException {
+		sender = new MessageSender(mapper);
+		sender.config = new PulsarConfig();
+		sender.config.setTopics(new HashMap<>());
+		sender.config.getTopics().put("gumdrop", new TopicConfig());
+		Map<String, String> props = new HashMap<>();
+		assertNull(sender.sendMessage(null, "", props));
 	}
 
 	@Test

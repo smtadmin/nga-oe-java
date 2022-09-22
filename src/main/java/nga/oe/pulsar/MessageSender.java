@@ -120,7 +120,7 @@ public class MessageSender {
 	public MessageId sendLog(MachineLogDTO mLog, Map<String, String> properties) throws PulsarClientException {
 		MessageId mId = null;
 		if (mLog.isValid()) {
-			sendRequestDTOMessage(mLog, schema, LOGGING_TOPIC, properties);
+			return sendRequestDTOMessage(mLog, schema, LOGGING_TOPIC, properties);
 		} else {
 			log.error(mLog);
 		}
