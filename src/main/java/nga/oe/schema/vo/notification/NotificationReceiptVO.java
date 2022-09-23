@@ -1,11 +1,10 @@
-package nga.oe.schema.vo;
+package nga.oe.schema.vo.notification;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import nga.oe.schema.vo.NotificationTypeDTO.NotificationType;
 
 /**
  * <b>Title:</b> NotificationReceiptVO.java <b>Project:</b> notification-system
