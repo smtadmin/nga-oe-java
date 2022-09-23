@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.validation.ConstraintViolationException;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -12,6 +14,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.siliconmtn.data.text.StringUtil;
@@ -20,6 +23,7 @@ import lombok.extern.log4j.Log4j2;
 import nga.oe.config.ApplicationConfig;
 import nga.oe.pulsar.MessageSender;
 import nga.oe.pulsar.RequestDTOMessageListener;
+import nga.oe.schema.exception.AppSchemaException;
 import nga.oe.schema.exception.UnexpectedException;
 import nga.oe.schema.vo.MachineLogDTO;
 import nga.oe.schema.vo.MachineLogDTO.EventTypeCd;
@@ -91,8 +95,11 @@ public class LoggerAoP {
 			// value.
 			msg = generateMessage(dto, response, "END JOB + " + System.currentTimeMillis(), EventTypeCd.EVENT_END);
 			sender.sendLog(msg, props);
+		} catch(AppSchemaException | ConstraintViolationException | MethodArgumentNotValidException e) {
+			thr = e;
+			sender.sendErrorLog(e, "There was a problem Processing Request", MessageSender.extractProps(dto));
 		} catch (Throwable t) {
-			thr = t;
+			thr = new UnexpectedException(t.getMessage(), t);
 			sender.sendErrorLog(new Exception(t), "There was a problem Processing Request",
 					MessageSender.extractProps(dto));
 		} finally {
@@ -102,7 +109,7 @@ public class LoggerAoP {
 			sender.sendLog(msg, props);
 		}
 		if (thr != null) {
-			throw new UnexpectedException(thr.getMessage(), thr);
+			throw thr;
 		}
 
 		return response;
