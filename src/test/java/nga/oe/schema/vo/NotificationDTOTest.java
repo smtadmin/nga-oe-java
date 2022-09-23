@@ -7,13 +7,13 @@ import org.junit.jupiter.api.Test;
 
 import nga.oe.schema.vo.NotificationTypeDTO.NotificationType;
 
-public class NotificationDTOTest {
+class NotificationDTOTest {
 
 	@Test
 	void testAddNotificationType() {
 		NotificationDTO dto = new NotificationDTO();
 		dto.addNotificationType(NotificationType.alert);
-		
+
 		assertFalse(dto.getNotificationType().isEmpty());
 		assertEquals(NotificationType.alert.name(), dto.getNotificationType().get(0).getNotificationTypeCode());
 	}

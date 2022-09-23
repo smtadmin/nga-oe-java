@@ -1,5 +1,6 @@
 package nga.oe.schema.exception;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import com.networknt.schema.ValidationMessage;
@@ -32,5 +33,10 @@ public class AppSchemaException extends Exception {
 	public AppSchemaException(String message, Set<ValidationMessage> issues) {
 		super(message);
 		this.issues = issues;
+	}
+
+	public AppSchemaException(String message, Exception e) {
+		super(message, e);
+		this.issues = new HashSet<>();
 	}
 }

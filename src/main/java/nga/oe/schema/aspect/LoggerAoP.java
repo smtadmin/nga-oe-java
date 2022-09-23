@@ -20,6 +20,7 @@ import lombok.extern.log4j.Log4j2;
 import nga.oe.config.ApplicationConfig;
 import nga.oe.pulsar.MessageSender;
 import nga.oe.pulsar.RequestDTOMessageListener;
+import nga.oe.schema.exception.UnexpectedException;
 import nga.oe.schema.vo.MachineLogDTO;
 import nga.oe.schema.vo.MachineLogDTO.EventTypeCd;
 import nga.oe.schema.vo.MachineLogDTO.LogLevel;
@@ -68,25 +69,41 @@ public class LoggerAoP {
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.findAndRegisterModules();
 		Object data = null;
-		if(!StringUtil.isEmpty(dto.getData())) {
-	        data = mapper.readValue(dto.getData(), Map.class);
+		if (!StringUtil.isEmpty(dto.getData())) {
+			data = mapper.readValue(dto.getData(), Map.class);
 		}
 		// Generate and send the Starting MachineLog Message with initial Payload of the
 		// Request Data value.
-		MachineLogDTO msg = generateMessage(dto, data, "START JOB + " + System.currentTimeMillis(),  EventTypeCd.EVENT_START);
+		MachineLogDTO msg = generateMessage(dto, data, "START JOB + " + System.currentTimeMillis(),
+				EventTypeCd.EVENT_START);
 		sender.sendLog(msg, props);
 
 		log.info("Executing {}.{} with argument: {}", targetClass, targetMethod, dto);
+		Object response = null;
+		Throwable thr = null;
+		try {
+			// Execute wrapped method and capture the result
+			response = joinPoint.proceed();
 
-		// Execute wrapped method and capture the result
-		Object response = joinPoint.proceed();
+			log.info("Method returned: {}", response);
 
-		log.info("Method returned: {}", response);
-
-		// Generate and send the end MachineLog Message with payload of the response
-		// value.
-		msg = generateMessage(dto, response, "END JOB + " + System.currentTimeMillis(), EventTypeCd.EVENT_END);
-		sender.sendLog(msg, props);
+			// Generate and send the end MachineLog Message with payload of the response
+			// value.
+			msg = generateMessage(dto, response, "END JOB + " + System.currentTimeMillis(), EventTypeCd.EVENT_END);
+			sender.sendLog(msg, props);
+		} catch (Throwable t) {
+			thr = t;
+			sender.sendErrorLog(new Exception(t), "There was a problem Processing Request",
+					MessageSender.extractProps(dto));
+		} finally {
+			// Generate and send the end MachineLog Message with payload of the response
+			// value.
+			msg = generateMessage(dto, response, "END JOB + " + System.currentTimeMillis(), EventTypeCd.EVENT_END);
+			sender.sendLog(msg, props);
+		}
+		if (thr != null) {
+			throw new UnexpectedException(thr.getMessage(), thr);
+		}
 
 		return response;
 	}

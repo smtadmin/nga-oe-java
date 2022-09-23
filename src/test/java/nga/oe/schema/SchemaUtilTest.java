@@ -136,7 +136,7 @@ class SchemaUtilTest {
 	}
 
 	@Test
-	void convertBaseRequestTest() throws IOException {
+	void convertBaseRequestTest() throws IOException, AppSchemaException {
 		File file = resource.getFile();
 		JsonNode node = mapper.readTree(file);
 		dto = new RequestDTO();
@@ -149,7 +149,7 @@ class SchemaUtilTest {
 	}
 
 	@Test
-	void convertCustomRequestTest() throws IOException {
+	void convertCustomRequestTest() throws IOException, AppSchemaException {
 		File file = customResource.getFile();
 		JsonNode node = mapper.readTree(file);
 		dto = new RequestDTO();
@@ -164,7 +164,7 @@ class SchemaUtilTest {
 	}
 
 	@Test
-	void convertCustomRequestNestedTest() throws IOException {
+	void convertCustomRequestNestedTest() throws IOException, AppSchemaException {
 		File file = customResource.getFile();
 		JsonNode node = mapper.readTree(file);
 		dto = new RequestDTO();
@@ -180,15 +180,14 @@ class SchemaUtilTest {
 	}
 
 	@Test
-	void convertBadDataSyntaxTest() throws IOException {
+	void convertBadDataSyntaxTest() throws IOException, AppSchemaException {
 		File file = resource.getFile();
 		JsonNode node = mapper.readTree(file);
 		dto = new RequestDTO();
 		dto.setData(node.get("data").toString().substring(1));
 		dto.setSchema(node.get("schema").toString());
 
-		MachineLogDTO logDto = service.convertRequest(dto, MachineLogDTO.class);
-		assertNull(logDto);
+		assertThrows(AppSchemaException.class, () -> service.convertRequest(dto, MachineLogDTO.class));
 	}
 
 	@Test

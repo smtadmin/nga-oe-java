@@ -4,6 +4,7 @@ package nga.oe.schema.aspect;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -30,6 +31,8 @@ import com.google.gson.GsonBuilder;
 
 import nga.oe.config.ApplicationConfig;
 import nga.oe.pulsar.MessageSender;
+import nga.oe.schema.exception.AppSchemaException;
+import nga.oe.schema.exception.UnexpectedException;
 import nga.oe.schema.vo.MachineLogDTO;
 import nga.oe.schema.vo.MachineLogDTO.EventTypeCd;
 import nga.oe.schema.vo.MachineLogDTO.LogLevel;
@@ -99,6 +102,23 @@ class LoggerAoPTest {
 		req.setData(gson.toJson(payload));
 		req.setUiTransactionId(UUID.randomUUID());
 		assertDoesNotThrow(() -> aop.aroundAdvice(jp, req));
+	}
+
+	@Test
+	void testAroundAdviceWithException() throws Throwable {
+		Map<String, String> payload = new HashMap<>();
+		payload.put("name", "Hello World");
+		Gson gson = new GsonBuilder().create();
+
+		ProceedingJoinPoint jp = Mockito.mock(ProceedingJoinPoint.class);
+		Signature sig = Mockito.mock(Signature.class);
+		when(jp.getTarget()).thenReturn(new Object());
+		when(jp.getSignature()).thenReturn(sig);
+		when(jp.proceed()).thenThrow(new AppSchemaException("Bad", new Exception()));
+		RequestDTO req = new RequestDTO();
+		req.setData(gson.toJson(payload));
+		req.setUiTransactionId(UUID.randomUUID());
+		assertThrows(UnexpectedException.class, () -> aop.aroundAdvice(jp, req));
 	}
 
 	@Test
