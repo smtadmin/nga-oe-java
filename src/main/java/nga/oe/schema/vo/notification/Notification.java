@@ -1,12 +1,5 @@
 package nga.oe.schema.vo.notification;
 
-import com.siliconmtn.io.api.base.BaseEntity;
-
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -17,19 +10,26 @@ import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import com.siliconmtn.io.api.base.BaseEntity;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
 /**
- * <b>Title:</b> Notification.java
- * <b>Project:</b> Notification Management
- * <b>Description:</b> NOtification entity used to save a notification to the database
+ * <b>Title:</b> Notification.java <b>Project:</b> Notification Management
+ * <b>Description:</b> NOtification entity used to save a notification to the
+ * database
  *
- * <b>Copyright:</b> 2022
- * <b>Company:</b> Silicon Mountain Technologies
+ * <b>Copyright:</b> 2022 <b>Company:</b> Silicon Mountain Technologies
  * 
  * @author Eric Damschroder
  * @version 1.0
@@ -45,7 +45,7 @@ import javax.persistence.Transient;
 @Cacheable
 @Table(name = "notification", schema = "hmf_notifications")
 public class Notification implements BaseEntity {
-	
+
 	private static final long serialVersionUID = -3611774832481044370L;
 
 	@Id
@@ -100,13 +100,7 @@ public class Notification implements BaseEntity {
 	@Column(name = "dismiss_dt", columnDefinition = "timestamp")
 	private ZonedDateTime dismissDt;
 
-
-	@Transient
-	@OneToMany(
-            mappedBy = "notification",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+	@OneToMany(mappedBy = "notification", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<NotificationTypeXr> notificationType = new ArrayList<>();
 
 	@Column(name = "create_dt", columnDefinition = "timestamp", nullable = false, updatable = false)
@@ -120,10 +114,10 @@ public class Notification implements BaseEntity {
 
 	@Transient
 	private boolean actionable;
-	
+
 	@PrePersist
-    public void prePersist() {
+	public void prePersist() {
 		createDt = ZonedDateTime.now(ZoneOffset.UTC);
-    }
+	}
 
 }
