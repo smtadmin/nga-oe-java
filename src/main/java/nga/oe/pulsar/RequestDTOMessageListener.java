@@ -46,7 +46,7 @@ public class RequestDTOMessageListener<T extends RequestServiceImpl<?>> implemen
 
 	private ObjectMapper objectMapper;
 
-	RequestDTOMessageListener() {
+	public RequestDTOMessageListener() {
 		objectMapper = new ObjectMapper();
 		objectMapper.findAndRegisterModules();
 	}

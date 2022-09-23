@@ -7,12 +7,14 @@ import java.util.UUID;
 import com.siliconmtn.data.util.EntityIgnore;
 import com.siliconmtn.io.api.base.BaseDTO;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import nga.oe.schema.Parseable;
+import nga.oe.schema.vo.NotificationTypeDTO.NotificationType;
 
 /**
  * <b>Title:</b> NotificationDTO.java
@@ -56,7 +58,7 @@ public class NotificationDTO extends Parseable implements BaseDTO {
 
 	private UUID orderId;
 
-	private UUID environmentId;
+	private String environmentId;
 
 	private UUID simulationId;
 
@@ -72,7 +74,11 @@ public class NotificationDTO extends Parseable implements BaseDTO {
 	
 	private boolean actionable;
 
+	@Setter(AccessLevel.NONE)
 	@EntityIgnore
 	private List<NotificationTypeXrDTO> notificationType = new ArrayList<>();
 	
+	public void addNotificationType(NotificationType type) {
+		notificationType.add(new NotificationTypeXrDTO(type.name()));
+	}
 }

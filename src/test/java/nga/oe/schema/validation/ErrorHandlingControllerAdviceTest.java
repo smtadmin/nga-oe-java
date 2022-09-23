@@ -25,6 +25,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import com.networknt.schema.ValidationMessage;
 
 import nga.oe.schema.exception.AppSchemaException;
+import nga.oe.schema.exception.UnexpectedException;
 import nga.oe.schema.vo.RequestDTO;
 import nga.oe.schema.vo.ValidationErrorResponse;
 
@@ -91,6 +92,16 @@ class ErrorHandlingControllerAdviceTest {
 		assertEquals(1, error.getViolations().size());
 		assertEquals(error.getViolations().get(0).getFieldName(), issues.iterator().next().getPath());
 		assertEquals(error.getViolations().get(0).getMessage(), issues.iterator().next().getMessage());
+
+	}
+
+	@Test
+	void onUnexpectedExceptionTest() {
+		ValidationErrorResponse error = advice
+				.onUnexpectedException(new UnexpectedException("Unexpected", new Exception("Error")));
+		assertEquals(1, error.getViolations().size());
+		assertEquals("Problem Processing Request", error.getViolations().get(0).getFieldName());
+		assertEquals("Unexpected", error.getViolations().get(0).getMessage());
 
 	}
 }

@@ -35,7 +35,7 @@ public class MachineLogDTO extends Parseable implements BaseDTO {
 	private static final long serialVersionUID = 3231015195890050596L;
 
 	public enum LogLevel {
-		FATAL, SYSTEM, ERROR, WARNING, INFO, DEBUG, TRACE
+		FATAL, SYSTEM, ERROR, WARNING, INFO, DEBUG, TRACE, SUCCESS
 	}
 
 	public enum ClassificationLevel {

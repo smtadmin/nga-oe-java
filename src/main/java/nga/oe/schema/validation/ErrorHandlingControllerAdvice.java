@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import com.networknt.schema.ValidationMessage;
 
 import nga.oe.schema.exception.AppSchemaException;
+import nga.oe.schema.exception.UnexpectedException;
 import nga.oe.schema.vo.ValidationErrorResponse;
 import nga.oe.schema.vo.Violation;
 
@@ -83,6 +84,22 @@ public class ErrorHandlingControllerAdvice {
 		for (ValidationMessage issue : e.getIssues()) {
 			error.getViolations().add(new Violation(issue.getPath(), issue.getMessage()));
 		}
+		return error;
+	}
+
+	/**
+	 * Convert UnexpectedException thrown during internal processing/validation of
+	 * json data against a schema.
+	 * 
+	 * @param e
+	 * @return
+	 */
+	@ExceptionHandler(UnexpectedException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ResponseBody
+	ValidationErrorResponse onUnexpectedException(UnexpectedException e) {
+		ValidationErrorResponse error = new ValidationErrorResponse();
+		error.getViolations().add(new Violation("Problem Processing Request", e.getMessage()));
 		return error;
 	}
 }
