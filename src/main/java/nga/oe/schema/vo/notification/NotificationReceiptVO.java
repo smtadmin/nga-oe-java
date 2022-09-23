@@ -26,7 +26,7 @@ import lombok.ToString;
 @ToString
 public class NotificationReceiptVO {
 
-	NotificationType notificationType;
+	NotificationTypeDTO.NotificationType notificationType;
 	String status;
 	boolean succes;
 	Object payload;
