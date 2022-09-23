@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import nga.oe.schema.Parseable;
-import nga.oe.schema.vo.NotificationTypeDTO.NotificationType;
+import nga.oe.schema.vo.notification.NotificationTypeDTO.NotificationType;
 
 /**
  * <b>Title:</b> NotificationDTO.java
