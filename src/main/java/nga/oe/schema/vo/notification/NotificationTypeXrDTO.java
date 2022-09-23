@@ -2,7 +2,6 @@ package nga.oe.schema.vo.notification;
 
 import java.util.UUID;
 
-import com.siliconmtn.data.util.EntityIgnore;
 import com.siliconmtn.io.api.base.BaseDTO;
 
 import lombok.AllArgsConstructor;
@@ -33,9 +32,13 @@ public class NotificationTypeXrDTO implements BaseDTO {
 
 	private static final long serialVersionUID = 37184217119585672L;
 
+	public NotificationTypeXrDTO(String notificationTypeCode) {
+		this.notificationTypeCode = notificationTypeCode;
+	}
+
 	private UUID notificationTypeXrId = UUID.randomUUID();
 
-	@EntityIgnore
-	private NotificationTypeDTO notificationTypeCode;
-	
+	private UUID notification;
+
+	private String notificationTypeCode;
 }

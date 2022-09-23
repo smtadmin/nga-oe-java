@@ -4,12 +4,16 @@ package nga.oe.schema.aspect;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import javax.validation.ConstraintViolationException;
 
 // Pulsar Libsa
 import org.apache.pulsar.client.api.PulsarClientException;
@@ -23,6 +27,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
@@ -30,6 +35,8 @@ import com.google.gson.GsonBuilder;
 
 import nga.oe.config.ApplicationConfig;
 import nga.oe.pulsar.MessageSender;
+import nga.oe.schema.exception.AppSchemaException;
+import nga.oe.schema.exception.UnexpectedException;
 import nga.oe.schema.vo.MachineLogDTO;
 import nga.oe.schema.vo.MachineLogDTO.EventTypeCd;
 import nga.oe.schema.vo.MachineLogDTO.LogLevel;
@@ -99,6 +106,77 @@ class LoggerAoPTest {
 		req.setData(gson.toJson(payload));
 		req.setUiTransactionId(UUID.randomUUID());
 		assertDoesNotThrow(() -> aop.aroundAdvice(jp, req));
+	}
+
+	@Test
+	void testAroundAdviceWithAppSchemaException() throws Throwable {
+		Map<String, String> payload = new HashMap<>();
+		payload.put("name", "Hello World");
+		Gson gson = new GsonBuilder().create();
+
+		ProceedingJoinPoint jp = Mockito.mock(ProceedingJoinPoint.class);
+		Signature sig = Mockito.mock(Signature.class);
+		when(jp.getTarget()).thenReturn(new Object());
+		when(jp.getSignature()).thenReturn(sig);
+		when(jp.proceed()).thenThrow(new AppSchemaException("Bad", new Exception()));
+		RequestDTO req = new RequestDTO();
+		req.setData(gson.toJson(payload));
+		req.setUiTransactionId(UUID.randomUUID());
+		assertThrows(AppSchemaException.class, () -> aop.aroundAdvice(jp, req));
+	}
+
+	@Test
+	void testAroundAdviceWithConstraintViolationException() throws Throwable {
+		Map<String, String> payload = new HashMap<>();
+		payload.put("name", "Hello World");
+		Gson gson = new GsonBuilder().create();
+		ConstraintViolationException cve = mock(ConstraintViolationException.class);
+
+		ProceedingJoinPoint jp = Mockito.mock(ProceedingJoinPoint.class);
+		Signature sig = Mockito.mock(Signature.class);
+		when(jp.getTarget()).thenReturn(new Object());
+		when(jp.getSignature()).thenReturn(sig);
+		when(jp.proceed()).thenThrow(cve);
+		RequestDTO req = new RequestDTO();
+		req.setData(gson.toJson(payload));
+		req.setUiTransactionId(UUID.randomUUID());
+		assertThrows(ConstraintViolationException.class, () -> aop.aroundAdvice(jp, req));
+	}
+
+	@Test
+	void testAroundAdviceWithMethodArgumentNotValidException() throws Throwable {
+		Map<String, String> payload = new HashMap<>();
+		payload.put("name", "Hello World");
+		Gson gson = new GsonBuilder().create();
+
+		MethodArgumentNotValidException m = mock(MethodArgumentNotValidException.class);
+
+		ProceedingJoinPoint jp = Mockito.mock(ProceedingJoinPoint.class);
+		Signature sig = Mockito.mock(Signature.class);
+		when(jp.getTarget()).thenReturn(new Object());
+		when(jp.getSignature()).thenReturn(sig);
+		when(jp.proceed()).thenThrow(m);
+		RequestDTO req = new RequestDTO();
+		req.setData(gson.toJson(payload));
+		req.setUiTransactionId(UUID.randomUUID());
+		assertThrows(MethodArgumentNotValidException.class, () -> aop.aroundAdvice(jp, req));
+	}
+
+	@Test
+	void testAroundAdviceWithException() throws Throwable {
+		Map<String, String> payload = new HashMap<>();
+		payload.put("name", "Hello World");
+		Gson gson = new GsonBuilder().create();
+
+		ProceedingJoinPoint jp = Mockito.mock(ProceedingJoinPoint.class);
+		Signature sig = Mockito.mock(Signature.class);
+		when(jp.getTarget()).thenReturn(new Object());
+		when(jp.getSignature()).thenReturn(sig);
+		when(jp.proceed()).thenThrow(new Exception("Error"));
+		RequestDTO req = new RequestDTO();
+		req.setData(gson.toJson(payload));
+		req.setUiTransactionId(UUID.randomUUID());
+		assertThrows(UnexpectedException.class, () -> aop.aroundAdvice(jp, req));
 	}
 
 	@Test

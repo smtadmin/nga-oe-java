@@ -187,8 +187,9 @@ public class SchemaUtil<T extends Parseable> {
 	 * 
 	 * @param req
 	 * @return
+	 * @throws Exception 
 	 */
-	public T convertRequest(RequestDTO req, Class<T> bean) {
+	public T convertRequest(RequestDTO req, Class<T> bean) throws AppSchemaException {
 		T dto = null;
 		try {
 			JsonNode node = convertNode(req);
@@ -199,6 +200,7 @@ public class SchemaUtil<T extends Parseable> {
 			}
 		} catch (AppSchemaException | JsonProcessingException | IllegalArgumentException e) {
 			log.error("Error Processing Request", e);
+			throw new AppSchemaException("Error Parsing JSON", e);
 		}
 
 		return dto;
