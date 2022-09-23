@@ -1,4 +1,4 @@
-package nga.oe.schema.vo;
+package nga.oe.schema.vo.notification;
 
 import java.util.UUID;
 

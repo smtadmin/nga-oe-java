@@ -1,4 +1,4 @@
-package nga.oe.schema.vo;
+package nga.oe.schema.vo.notification;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +56,7 @@ public class NotificationDTO extends Parseable implements BaseDTO {
 
 	private UUID orderId;
 
-	private UUID environmentId;
+	private String environmentId;
 
 	private UUID simulationId;
 
