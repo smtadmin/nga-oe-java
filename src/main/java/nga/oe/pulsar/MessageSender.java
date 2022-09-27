@@ -1,9 +1,5 @@
 package nga.oe.pulsar;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UncheckedIOException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,17 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.FileCopyUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import com.siliconmtn.data.text.StringUtil;
 import com.siliconmtn.data.util.EnumUtil;
 import com.siliconmtn.pulsar.PulsarConfig;
@@ -35,6 +24,7 @@ import com.siliconmtn.pulsar.TopicConfig;
 
 import lombok.extern.log4j.Log4j2;
 import nga.oe.config.ApplicationConfig;
+import nga.oe.schema.SchemaLoader;
 import nga.oe.schema.vo.MachineLogDTO;
 import nga.oe.schema.vo.MachineLogDTO.ClassificationLevel;
 import nga.oe.schema.vo.MachineLogDTO.Environment;
@@ -86,28 +76,10 @@ public class MessageSender {
 	public MessageSender(ObjectMapper mapper) {
 		this.mapper = mapper;
 		mapper.findAndRegisterModules();
-		Gson gson = new GsonBuilder().create();
-
 		try {
-			Resource resource = new ClassPathResource("machine_feedback_schema.json");
-			JsonElement el = JsonParser.parseString(asString(resource));
-			schema = gson.toJson(el);
-		} catch (Exception e) {
-			log.error(e);
-		}
-	}
-
-	/**
-	 * Read a resource as a String.
-	 * 
-	 * @param resource
-	 * @return
-	 */
-	public static String asString(Resource resource) {
-		try (Reader reader = new InputStreamReader(resource.getInputStream())) {
-			return FileCopyUtils.copyToString(reader).replace("\n", "").replace("\r", "");
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
+			schema = SchemaLoader.getResourceAsJSON("machine_feedback_schema.json");
+		} catch(Exception e) {
+			log.error("Unable to load Machine Schema", e);
 		}
 	}
 

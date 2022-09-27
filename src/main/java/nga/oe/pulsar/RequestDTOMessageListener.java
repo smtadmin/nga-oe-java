@@ -6,6 +6,7 @@ import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageListener;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -41,6 +42,12 @@ public class RequestDTOMessageListener<T extends RequestServiceImpl<?>> implemen
 	private static final long serialVersionUID = 2341934156383412579L;
 
 	transient T service;
+
+	@Autowired
+	RequestDTOMessageListener(T service) {
+		this();
+		this.service = service;
+	}
 
 	private ObjectMapper objectMapper;
 

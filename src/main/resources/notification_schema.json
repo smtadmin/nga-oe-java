@@ -1,0 +1,97 @@
+{
+    "$id": "https://nga.com/oe.notification.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "title": "Core Human Feedback Schema",
+    "description": "The General notifiation schema used for sending notifications through the system",
+    "createdBy": "Ray McManemin",
+    "createdFor": "HumanFeedback",
+    "version": ".01",
+    "type": "object",
+    "properties": {
+      "ownerId": {
+        "type": "string",
+        "minLength": 1
+      },
+      "serviceId": {
+        "type": "string",
+        "minLength": 1
+      },
+      "groupId": {
+        "type": ["string", "null"]
+      },
+      "title": {
+        "type": "string",
+        "minLength": 1
+      },
+      "message": {
+        "type": "string",
+        "minLength": 1
+      },
+      "microserviceId": {
+        "type": "string",
+        "minLength": 1
+      },
+      "sessionId": {
+        "type": "string",
+        "minLength": 1
+      },
+      "orderId": {
+        "type": ["string", "null"]
+      },
+      "environmentId": {
+        "type": "string",
+        "minLength": 1
+      },
+      "simulationId": {
+        "type": ["string", "null"]
+      },
+      "transactionId": {
+        "type": "string",
+        "minLength": 1
+      },
+      "notificationType": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "notificationTypeCode": {
+              "type": "string"
+            },
+            "notificationTypeXrId": {
+              "type": "string"
+            },
+            "notificationId": {
+              "type": "string"
+            }
+          }
+        },
+        "ttyNumber": {
+          "type": "number"
+        },
+        "clearanceLevel": {
+          "type": "string"
+        },
+        "severityCode": {
+          "type": "string"
+        },
+        "actionable": {
+          "type": "boolean"
+        },
+        "emailIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "smsIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "required": [
+        "message"
+      ]
+  }
