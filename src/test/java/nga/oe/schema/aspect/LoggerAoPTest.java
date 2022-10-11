@@ -68,7 +68,13 @@ class LoggerAoPTest {
 	@BeforeEach
 	void setup() {
 		sender = Mockito.mock(MessageSender.class);
-		when(sender.generateBaseMachineLog(any(), any())).thenReturn(new MachineLogDTO());
+		when(sender.generateBaseMachineLog(any(), any(), any())).thenAnswer(a -> {
+			MachineLogDTO ml = new MachineLogDTO();
+			ml.setSessionId(a.getArgument(0));
+			ml.setUiTransactionId(a.getArgument(1));
+			ml.setUserId(a.getArgument(2));
+			return ml;
+		});
 		aop.sender = sender;
 	}
 
@@ -88,7 +94,7 @@ class LoggerAoPTest {
 		when(jp.getTarget()).thenReturn(new Object());
 		when(jp.getSignature()).thenReturn(sig);
 		RequestDTO req = new RequestDTO();
-		req.setUiTransactionId(UUID.randomUUID());
+		req.setProperty(RequestDTO.TRANSACTION_ID, UUID.randomUUID().toString());
 		assertDoesNotThrow(() -> aop.aroundAdvice(jp, req));
 	}
 
@@ -104,7 +110,7 @@ class LoggerAoPTest {
 		when(jp.getSignature()).thenReturn(sig);
 		RequestDTO req = new RequestDTO();
 		req.setData(gson.toJson(payload));
-		req.setUiTransactionId(UUID.randomUUID());
+		req.setProperty(RequestDTO.TRANSACTION_ID, UUID.randomUUID().toString());
 		assertDoesNotThrow(() -> aop.aroundAdvice(jp, req));
 	}
 
@@ -121,7 +127,7 @@ class LoggerAoPTest {
 		when(jp.proceed()).thenThrow(new AppSchemaException("Bad", new Exception()));
 		RequestDTO req = new RequestDTO();
 		req.setData(gson.toJson(payload));
-		req.setUiTransactionId(UUID.randomUUID());
+		req.setProperty(RequestDTO.TRANSACTION_ID, UUID.randomUUID().toString());
 		assertThrows(AppSchemaException.class, () -> aop.aroundAdvice(jp, req));
 	}
 
@@ -139,7 +145,7 @@ class LoggerAoPTest {
 		when(jp.proceed()).thenThrow(cve);
 		RequestDTO req = new RequestDTO();
 		req.setData(gson.toJson(payload));
-		req.setUiTransactionId(UUID.randomUUID());
+		req.setProperty(RequestDTO.TRANSACTION_ID, UUID.randomUUID().toString());
 		assertThrows(ConstraintViolationException.class, () -> aop.aroundAdvice(jp, req));
 	}
 
@@ -158,7 +164,7 @@ class LoggerAoPTest {
 		when(jp.proceed()).thenThrow(m);
 		RequestDTO req = new RequestDTO();
 		req.setData(gson.toJson(payload));
-		req.setUiTransactionId(UUID.randomUUID());
+		req.setProperty(RequestDTO.TRANSACTION_ID, UUID.randomUUID().toString());
 		assertThrows(MethodArgumentNotValidException.class, () -> aop.aroundAdvice(jp, req));
 	}
 
@@ -175,14 +181,14 @@ class LoggerAoPTest {
 		when(jp.proceed()).thenThrow(new Exception("Error"));
 		RequestDTO req = new RequestDTO();
 		req.setData(gson.toJson(payload));
-		req.setUiTransactionId(UUID.randomUUID());
+		req.setProperty(RequestDTO.TRANSACTION_ID, UUID.randomUUID().toString());
 		assertThrows(UnexpectedException.class, () -> aop.aroundAdvice(jp, req));
 	}
 
 	@Test
 	void testGenerateMessage() throws JsonProcessingException {
 		RequestDTO dto = new RequestDTO();
-		dto.setSessionId(UUID.randomUUID());
+		dto.setProperty(RequestDTO.SESSION_ID, UUID.randomUUID().toString());
 		String eventSummary = "Event Summary" + Math.random();
 		Map<String, String> payload = new HashMap<>();
 		payload.put("name", "Hello World");
@@ -195,6 +201,6 @@ class LoggerAoPTest {
 		assertEquals(EventTypeCd.EVENT_INFO, msg.getEventTypeCd());
 		assertEquals(eventSummary, msg.getEventSummary());
 		assertEquals(gson.toJson(payload), msg.getPayload());
-		assertEquals(dto.getSessionId(), msg.getSessionId());
+		assertEquals(dto.getProperty(RequestDTO.SESSION_ID), msg.getSessionId().toString());
 	}
 }

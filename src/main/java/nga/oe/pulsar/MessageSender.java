@@ -1,7 +1,6 @@
 package nga.oe.pulsar;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -107,8 +106,8 @@ public class MessageSender {
 	 * @throws PulsarClientException
 	 */
 	public MessageId sendErrorLog(Exception e, String eventName, Map<String, String> properties) {
-		MachineLogDTO msg = generateBaseMachineLogWithStrings(properties.get(RequestDTOMessageListener.SESSION_ID),
-				properties.get(RequestDTOMessageListener.TRANSACTION_ID));
+		MachineLogDTO msg = generateBaseMachineLogWithStrings(properties.get(RequestDTO.SESSION_ID),
+				properties.get(RequestDTO.TRANSACTION_ID), properties.get(RequestDTO.USER_ID));
 		msg.setEventTypeCd(EventTypeCd.EVENT_IN_PROGRESS);
 		msg.setLogLevel(LogLevel.SYSTEM);
 		msg.setEventName(eventName);
@@ -130,16 +129,20 @@ public class MessageSender {
 	 * @param transactionId
 	 * @return
 	 */
-	public MachineLogDTO generateBaseMachineLogWithStrings(String sessionId, String transactionId) {
+	public MachineLogDTO generateBaseMachineLogWithStrings(String sessionId, String transactionId, String userId) {
 		UUID sessId = null;
 		UUID transId = null;
+		UUID uId = null;
 		if (!StringUtil.isEmpty(sessionId)) {
 			sessId = UUID.fromString(sessionId);
 		}
 		if (!StringUtil.isEmpty(transactionId)) {
 			transId = UUID.fromString(transactionId);
 		}
-		return generateBaseMachineLog(sessId, transId);
+		if (!StringUtil.isEmpty(userId)) {
+			uId = UUID.fromString(userId);
+		}
+		return generateBaseMachineLog(sessId, transId, uId);
 	}
 
 	/**
@@ -149,7 +152,7 @@ public class MessageSender {
 	 * @param transactionId
 	 * @return
 	 */
-	public MachineLogDTO generateBaseMachineLog(UUID sessionId, UUID transactionId) {
+	public MachineLogDTO generateBaseMachineLog(UUID sessionId, UUID transactionId, UUID userId) {
 		MachineLogDTO msg = new MachineLogDTO();
 		msg.setServiceId(appConfig.getServiceId());
 		msg.setEnvironment(EnumUtil.safeValueOf(Environment.class, appConfig.getEnvironmentCd()));
@@ -158,6 +161,7 @@ public class MessageSender {
 		msg.setExecutionDateTime(Instant.now());
 		msg.setSessionId(sessionId);
 		msg.setUiTransactionId(transactionId);
+		msg.setUserId(userId);
 		return msg;
 	}
 
@@ -175,12 +179,16 @@ public class MessageSender {
 		// If an incorrect topic was supplied just return here
 		if (tConfig == null) return mId;
 
-		try (Producer<byte[]> p = buildProducer(tConfig, properties)) {
+		try (Producer<byte[]> p = buildProducer(tConfig)) {
 			String json;
 			try {
 				json = mapper.writeValueAsString(msg);
 				log.info(json);
-				mId = p.send(json.getBytes());
+				mId = p
+						.newMessage()
+						.value(json.getBytes())
+						.properties(properties)
+						.send();
 			} catch (JsonProcessingException e) {
 				log.error("TODO", e);
 			}
@@ -202,10 +210,14 @@ public class MessageSender {
 		// If an incorrect topic was supplied just return here
 		if (tConfig == null) return mId;
 
-		try(Producer<byte[]> p = buildProducer(tConfig, properties)) {
+		try(Producer<byte[]> p = buildProducer(tConfig)) {
 			String json = mapper.writeValueAsString(msg);
 			RequestDTO rdto = new RequestDTO(reqSchema, json);
-			mId = p.send(mapper.writeValueAsBytes(rdto));
+			mId = p
+				.newMessage()
+				.value(mapper.writeValueAsBytes(rdto))
+				.properties(properties)
+				.send();
 		} catch (JsonProcessingException e) {
 			log.error("TODO", e);
 		}
@@ -220,9 +232,9 @@ public class MessageSender {
 	 * @return
 	 * @throws PulsarClientException
 	 */
-	public Producer<byte[]> buildProducer(TopicConfig topicConfig, Map<String, String> properties)
+	public Producer<byte[]> buildProducer(TopicConfig topicConfig)
 			throws PulsarClientException {
-		return client.newProducer().topic(topicConfig.getTopicUri()).producerName(topicConfig.getName()).properties(properties).create();
+		return client.newProducer().topic(topicConfig.getTopicUri()).producerName(topicConfig.getName()).create();
 	}
 
 	/**
@@ -232,13 +244,6 @@ public class MessageSender {
 	 * @return
 	 */
 	public static Map<String, String> extractProps(RequestDTO req) {
-		Map<String, String> props = new HashMap<>();
-		if (req.getSessionId() != null) {
-			props.put(RequestDTOMessageListener.SESSION_ID, req.getSessionId().toString());
-		}
-		if (req.getUiTransactionId() != null) {
-			props.put(RequestDTOMessageListener.TRANSACTION_ID, req.getUiTransactionId().toString());
-		}
-		return props;
+		return req.getProperties();
 	}
 }
