@@ -5,6 +5,8 @@ import static org.mockito.Mockito.doThrow;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.pulsar.client.api.Consumer;
@@ -123,9 +125,14 @@ class RequestDTOMessageListenerTest {
 
 	@Test
 	void messageValidationTestWithProps() throws AppSchemaException {
+		UUID sId = UUID.randomUUID();
 		UUID tId = UUID.randomUUID();
-		Mockito.when(msg.hasProperty(RequestDTOMessageListener.TRANSACTION_ID)).thenReturn(true);
-		Mockito.when(msg.getProperty(RequestDTOMessageListener.TRANSACTION_ID)).thenReturn(tId.toString());
+		UUID uId = UUID.randomUUID();
+		Map<String, String> properties = new HashMap<>();
+		properties.put(RequestDTO.SESSION_ID, sId.toString());
+		properties.put(RequestDTO.TRANSACTION_ID, tId.toString());
+		properties.put(RequestDTO.USER_ID, uId.toString());
+		Mockito.when(msg.getProperties()).thenReturn(properties);
 		Mockito.when(msg.getData()).thenReturn(json.getBytes());
 		Mockito.when(service.processRequest(dto)).thenReturn(Collections.singletonList(dto));
 		assertDoesNotThrow(() -> listener.received(consumer, msg));

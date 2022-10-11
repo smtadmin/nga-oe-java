@@ -1,10 +1,7 @@
 package nga.oe.pulsar;
 
-import java.util.UUID;
-
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
-import org.apache.pulsar.client.api.MessageListener;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -35,10 +32,8 @@ import nga.oe.service.RequestServiceImpl;
  */
 @Component
 @Log4j2
-public class RequestDTOMessageListener<T extends RequestServiceImpl<?>> implements MessageListener<byte[]> {
+public class RequestDTOMessageListener<T extends RequestServiceImpl<?>> implements BaseMessageListener {
 
-	public static final String SESSION_ID = "sessionId";
-	public static final String TRANSACTION_ID = "uiTransactionId";
 	private static final long serialVersionUID = 2341934156383412579L;
 
 	transient T service;
@@ -64,13 +59,8 @@ public class RequestDTOMessageListener<T extends RequestServiceImpl<?>> implemen
 	public void received(Consumer<byte[]> consumer, Message<byte[]> msg) {
 		try {
 			JsonNode node = objectMapper.readTree(msg.getData());
-			UUID transactionId = UUID.randomUUID();
-			if (msg.hasProperty(TRANSACTION_ID)) {
-				transactionId = UUID.fromString(msg.getProperty(TRANSACTION_ID));
-			}
-
 			RequestDTO req = new RequestDTO(SchemaUtil.extractData(node.get("schema")),
-					SchemaUtil.extractData(node.get("data")), null, transactionId);
+					SchemaUtil.extractData(node.get("data")), convertToHashMap(msg.getProperties()));
 
 			service.processRequest(req);
 			consumer.acknowledge(msg);

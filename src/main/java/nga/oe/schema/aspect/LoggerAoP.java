@@ -1,6 +1,5 @@
 package nga.oe.schema.aspect;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -22,7 +21,6 @@ import com.siliconmtn.data.text.StringUtil;
 import lombok.extern.log4j.Log4j2;
 import nga.oe.config.ApplicationConfig;
 import nga.oe.pulsar.MessageSender;
-import nga.oe.pulsar.RequestDTOMessageListener;
 import nga.oe.schema.exception.AppSchemaException;
 import nga.oe.schema.exception.UnexpectedException;
 import nga.oe.schema.vo.MachineLogDTO;
@@ -63,12 +61,9 @@ public class LoggerAoP {
 		String targetMethod = joinPoint.getSignature().getName();
 
 		// Set the sessionId on t he request
-		dto.setSessionId(UUID.randomUUID());
+		dto.setProperty(RequestDTO.SESSION_ID, UUID.randomUUID().toString());
 
-		Map<String, String> props = new HashMap<>();
-		props.put(RequestDTOMessageListener.SESSION_ID, dto.getSessionId().toString());
-		if (dto.getUiTransactionId() != null)
-			props.put(RequestDTOMessageListener.TRANSACTION_ID, dto.getUiTransactionId().toString());
+		Map<String, String> props = dto.getProperties();
 
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.findAndRegisterModules();
@@ -116,13 +111,11 @@ public class LoggerAoP {
 	}
 
 	MachineLogDTO generateMessage(RequestDTO dto, Object payload, String eventSummary, EventTypeCd eventTypeCd) {
-		MachineLogDTO msg = sender.generateBaseMachineLog(dto.getSessionId(), dto.getUiTransactionId());
+		MachineLogDTO msg = sender.generateBaseMachineLog(dto.getUUIDValue(RequestDTO.SESSION_ID), dto.getUUIDValue(RequestDTO.TRANSACTION_ID), dto.getUUIDValue(RequestDTO.USER_ID));
 		msg.setEventTypeCd(eventTypeCd);
 		msg.setLogLevel(LogLevel.SYSTEM);
 		msg.setEventName("System Log");
 		msg.setEventSummary(eventSummary);
-		msg.setSessionId(dto.getSessionId());
-		msg.setUiTransactionId(dto.getUiTransactionId());
 		msg.setPayload(payload);
 		return msg;
 	}

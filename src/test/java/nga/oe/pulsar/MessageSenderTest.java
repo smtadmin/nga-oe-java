@@ -19,6 +19,7 @@ import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.ProducerBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.client.api.TypedMessageBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -104,12 +105,17 @@ class MessageSenderTest {
 		sender.config.getTopics().put(MessageSender.LOGGING_TOPIC, new TopicConfig());
 		sender.client = client;
 		ProducerBuilder<byte[]> pb = Mockito.mock(ProducerBuilder.class);
+		TypedMessageBuilder<byte[]> tmb = Mockito.mock(TypedMessageBuilder.class);
+
 		Mockito.when(client.newProducer()).thenReturn(pb);
 		Mockito.when(pb.topic(any())).thenReturn(pb);
 		Mockito.when(pb.properties(anyMap())).thenReturn(pb);
 		Mockito.when(pb.producerName(any())).thenReturn(pb);
 		Mockito.when(pb.create()).thenReturn(producer);
-
+		Mockito.when(tmb.value(any())).thenReturn(tmb);
+		Mockito.when(tmb.properties(any())).thenReturn(tmb);
+		Mockito.when(tmb.send()).thenReturn(MessageId.latest);
+		Mockito.when(producer.newMessage()).thenReturn(tmb);
 		Map<String, String> props = new HashMap<>();
 		assertNotNull(sender.sendLog(msg, props));
 	}
@@ -140,13 +146,19 @@ class MessageSenderTest {
 		sender.config.getTopics().put(MessageSender.LOGGING_TOPIC, new TopicConfig());
 		sender.client = client;
 		ProducerBuilder<byte[]> pb = Mockito.mock(ProducerBuilder.class);
+		TypedMessageBuilder<byte[]> tmb = Mockito.mock(TypedMessageBuilder.class);
 		Mockito.when(client.newProducer()).thenReturn(pb);
 		Mockito.when(pb.topic(any())).thenReturn(pb);
 		Mockito.when(pb.properties(anyMap())).thenReturn(pb);
 		Mockito.when(pb.producerName(any())).thenReturn(pb);
 		Mockito.when(pb.create()).thenReturn(producer);
+		Mockito.when(tmb.value(any())).thenReturn(tmb);
+		Mockito.when(tmb.properties(any())).thenReturn(tmb);
+		Mockito.when(tmb.send()).thenReturn(MessageId.latest);
+		Mockito.when(producer.newMessage()).thenReturn(tmb);
+
 		Map<String, String> props = new HashMap<>();
-		props.put(RequestDTOMessageListener.SESSION_ID, UUID.randomUUID().toString());
+		props.put(RequestDTO.SESSION_ID, UUID.randomUUID().toString());
 		assertNotNull(sender.sendErrorLog(e, "SampleEvent", props));
 	}
 
@@ -158,7 +170,7 @@ class MessageSenderTest {
 		sender.appConfig.setClassificationLevel(ClassificationLevel.UNCLASSIFIED.name());
 		sender.appConfig.setMicroServiceId("notification:system");
 		sender.appConfig.setServiceId("HMF");
-		MachineLogDTO msg = sender.generateBaseMachineLogWithStrings(null, "");
+		MachineLogDTO msg = sender.generateBaseMachineLogWithStrings(null, "", "");
 
 		assertNotNull(msg);
 		assertNotNull(msg.getExecutionDateTime());
@@ -168,6 +180,7 @@ class MessageSenderTest {
 		assertEquals(sender.appConfig.getMicroServiceId(), msg.getMicroServiceId());
 		assertNull(msg.getSessionId());
 		assertNull(msg.getUiTransactionId());
+		assertNull(msg.getUserId());
 	}
 
 	@Test
@@ -180,7 +193,8 @@ class MessageSenderTest {
 		sender.appConfig.setServiceId("HMF");
 		UUID sessId = UUID.randomUUID();
 		UUID transId = UUID.randomUUID();
-		MachineLogDTO msg = sender.generateBaseMachineLogWithStrings(sessId.toString(), transId.toString());
+		UUID userId = UUID.randomUUID();
+		MachineLogDTO msg = sender.generateBaseMachineLogWithStrings(sessId.toString(), transId.toString(), userId.toString());
 
 		assertNotNull(msg);
 		assertNotNull(msg.getExecutionDateTime());
@@ -190,6 +204,7 @@ class MessageSenderTest {
 		assertEquals(sender.appConfig.getMicroServiceId(), msg.getMicroServiceId());
 		assertEquals(sessId, msg.getSessionId());
 		assertEquals(transId, msg.getUiTransactionId());
+		assertEquals(userId, msg.getUserId());
 	}
 
 	@Test
@@ -202,7 +217,8 @@ class MessageSenderTest {
 		sender.appConfig.setServiceId("HMF");
 		UUID sessId = UUID.randomUUID();
 		UUID transId = UUID.randomUUID();
-		MachineLogDTO msg = sender.generateBaseMachineLog(sessId, transId);
+		UUID userId = UUID.randomUUID();
+		MachineLogDTO msg = sender.generateBaseMachineLog(sessId, transId, userId);
 
 		assertNotNull(msg);
 		assertNotNull(msg.getExecutionDateTime());
@@ -212,6 +228,7 @@ class MessageSenderTest {
 		assertEquals(sender.appConfig.getMicroServiceId(), msg.getMicroServiceId());
 		assertEquals(sessId, msg.getSessionId());
 		assertEquals(transId, msg.getUiTransactionId());
+		assertEquals(userId, msg.getUserId());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -268,11 +285,17 @@ class MessageSenderTest {
 		sender.config.getTopics().put("gumdrop", new TopicConfig());
 		sender.client = client;
 		ProducerBuilder<byte[]> pb = Mockito.mock(ProducerBuilder.class);
+		TypedMessageBuilder<byte[]> tmb = Mockito.mock(TypedMessageBuilder.class);
+
 		Mockito.when(client.newProducer()).thenReturn(pb);
 		Mockito.when(pb.topic(any())).thenReturn(pb);
 		Mockito.when(pb.properties(anyMap())).thenReturn(pb);
 		Mockito.when(pb.producerName(any())).thenReturn(pb);
 		Mockito.when(pb.create()).thenReturn(producer);
+		Mockito.when(tmb.value(any())).thenReturn(tmb);
+		Mockito.when(tmb.properties(any())).thenReturn(tmb);
+		Mockito.when(tmb.send()).thenReturn(MessageId.latest);
+		Mockito.when(producer.newMessage()).thenReturn(tmb);
 		Map<String, String> props = new HashMap<>();
 		assertNotNull(sender.sendMessage(msg, "gumdrop", props));
 	}
@@ -280,11 +303,13 @@ class MessageSenderTest {
 	@Test
 	void testExtractPropsValid() {
 		RequestDTO dto = new RequestDTO();
-		dto.setSessionId(UUID.randomUUID());
-		dto.setUiTransactionId(UUID.randomUUID());
+		dto.setProperty(RequestDTO.SESSION_ID,UUID.randomUUID().toString());
+		dto.setProperty(RequestDTO.TRANSACTION_ID,UUID.randomUUID().toString());
+		dto.setProperty(RequestDTO.USER_ID,UUID.randomUUID().toString());
 		Map<String, String> props = MessageSender.extractProps(dto);
-		assertEquals(dto.getSessionId().toString(), props.get(RequestDTOMessageListener.SESSION_ID));
-		assertEquals(dto.getUiTransactionId().toString(), props.get(RequestDTOMessageListener.TRANSACTION_ID));
+		assertEquals(dto.getProperty(RequestDTO.SESSION_ID), props.get(RequestDTO.SESSION_ID));
+		assertEquals(dto.getProperty(RequestDTO.TRANSACTION_ID), props.get(RequestDTO.TRANSACTION_ID));
+		assertEquals(dto.getProperty(RequestDTO.USER_ID), props.get(RequestDTO.USER_ID));
 	}
 
 	@Test
@@ -295,23 +320,5 @@ class MessageSenderTest {
 		sender.config.getTopics().put("gumdrop", new TopicConfig());
 		Map<String, String> props = new HashMap<>();
 		assertNull(sender.sendMessage(null, "", props));
-	}
-
-	@Test
-	void testNoSessionId() {
-		RequestDTO dto = new RequestDTO();
-		dto.setUiTransactionId(UUID.randomUUID());
-		Map<String, String> props = MessageSender.extractProps(dto);
-		assertNull(props.get(RequestDTOMessageListener.SESSION_ID));
-		assertEquals(dto.getUiTransactionId().toString(), props.get(RequestDTOMessageListener.TRANSACTION_ID));
-	}
-
-	@Test
-	void testNoTransactionId() {
-		RequestDTO dto = new RequestDTO();
-		dto.setSessionId(UUID.randomUUID());
-		Map<String, String> props = MessageSender.extractProps(dto);
-		assertEquals(dto.getSessionId().toString(), props.get(RequestDTOMessageListener.SESSION_ID));
-		assertNull(props.get(RequestDTOMessageListener.TRANSACTION_ID));
 	}
 }
