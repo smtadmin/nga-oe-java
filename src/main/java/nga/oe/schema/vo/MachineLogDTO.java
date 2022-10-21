@@ -6,6 +6,7 @@ import java.util.UUID;
 import com.siliconmtn.data.text.StringUtil;
 import com.siliconmtn.io.api.base.BaseDTO;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,7 @@ import nga.oe.schema.Parseable;
 @Setter
 @Getter
 @ToString
+@Schema(description = "The Base Data collection model for Machine Logging")
 public class MachineLogDTO extends Parseable implements BaseDTO {
 
 	private static final long serialVersionUID = 3231015195890050596L;
@@ -50,7 +52,7 @@ public class MachineLogDTO extends Parseable implements BaseDTO {
 		EVENT_START, EVENT_IN_PROGRESS, EVENT_END, EVENT_INFO
 	}
 
-	public EventTypeCd eventTypeCd;
+	private EventTypeCd eventTypeCd;
 	private LogLevel logLevel;
 	private String serviceId;
 	private boolean simulationFlg;

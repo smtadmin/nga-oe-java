@@ -28,7 +28,7 @@ import lombok.Setter;
 public class AppSchemaException extends Exception {
 
 	private static final long serialVersionUID = 7921961456775367221L;
-	private final Set<ValidationMessage> issues;
+	private final transient Set<ValidationMessage> issues;
 
 	public AppSchemaException(String message, Set<ValidationMessage> issues) {
 		super(message);
