@@ -12,11 +12,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.networknt.schema.ValidationMessage;
+import com.siliconmtn.io.api.EndpointResponse;
+import com.siliconmtn.io.api.validation.ValidationErrorDTO;
+import com.siliconmtn.io.api.validation.ValidationErrorDTO.ValidationError;
 
 import nga.oe.schema.exception.AppSchemaException;
 import nga.oe.schema.exception.UnexpectedException;
-import nga.oe.schema.vo.ValidationErrorResponse;
-import nga.oe.schema.vo.Violation;
 
 /**
  * <b>Title:</b> ErrorHandlingControllerAdvice.java <b>Project:</b>
@@ -43,12 +44,12 @@ public class ErrorHandlingControllerAdvice {
 	@ExceptionHandler(ConstraintViolationException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ResponseBody
-	ValidationErrorResponse onConstraintValidationException(ConstraintViolationException e) {
-		ValidationErrorResponse error = new ValidationErrorResponse();
+	EndpointResponse onConstraintValidationException(ConstraintViolationException e) {
+		EndpointResponse response = new EndpointResponse(HttpStatus.BAD_REQUEST, e);
 		for (ConstraintViolation<?> violation : e.getConstraintViolations()) {
-			error.getViolations().add(new Violation(violation.getPropertyPath().toString(), violation.getMessage()));
+			response.addFailedValidation(ValidationErrorDTO.builder().elementId(violation.getPropertyPath().toString()).value(violation.getMessage()).validationError(ValidationError.PARSE).build());
 		}
-		return error;
+		return response;
 	}
 
 	/**
@@ -61,12 +62,12 @@ public class ErrorHandlingControllerAdvice {
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ResponseBody
-	ValidationErrorResponse onMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-		ValidationErrorResponse error = new ValidationErrorResponse();
+	EndpointResponse onMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+		EndpointResponse response = new EndpointResponse(HttpStatus.BAD_REQUEST);
 		for (FieldError fieldError : e.getBindingResult().getFieldErrors()) {
-			error.getViolations().add(new Violation(fieldError.getField(), fieldError.getDefaultMessage()));
+			response.addFailedValidation(ValidationErrorDTO.builder().elementId(fieldError.getField()).value(fieldError.getDefaultMessage()).validationError(ValidationError.PARSE).build());
 		}
-		return error;
+		return response;
 	}
 
 	/**
@@ -79,12 +80,12 @@ public class ErrorHandlingControllerAdvice {
 	@ExceptionHandler(AppSchemaException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ResponseBody
-	ValidationErrorResponse onAppSchemaException(AppSchemaException e) {
-		ValidationErrorResponse error = new ValidationErrorResponse();
-		for (ValidationMessage issue : e.getIssues()) {
-			error.getViolations().add(new Violation(issue.getPath(), issue.getMessage()));
+	EndpointResponse onAppSchemaException(AppSchemaException e) {
+		EndpointResponse response = new EndpointResponse(HttpStatus.BAD_REQUEST, e);
+		for (ValidationMessage msg : e.getIssues()) {
+			response.addFailedValidation(ValidationErrorDTO.builder().elementId(msg.getPath()).value(msg.getMessage()).validationError(ValidationError.PARSE).build());
 		}
-		return error;
+		return response;
 	}
 
 	/**
@@ -97,9 +98,7 @@ public class ErrorHandlingControllerAdvice {
 	@ExceptionHandler(UnexpectedException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ResponseBody
-	ValidationErrorResponse onUnexpectedException(UnexpectedException e) {
-		ValidationErrorResponse error = new ValidationErrorResponse();
-		error.getViolations().add(new Violation("Problem Processing Request", e.getMessage()));
-		return error;
+	EndpointResponse onUnexpectedException(UnexpectedException e) {
+		return new EndpointResponse(HttpStatus.BAD_REQUEST, e);
 	}
 }

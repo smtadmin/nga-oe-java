@@ -23,11 +23,11 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import com.networknt.schema.ValidationMessage;
+import com.siliconmtn.io.api.EndpointResponse;
 
 import nga.oe.schema.exception.AppSchemaException;
 import nga.oe.schema.exception.UnexpectedException;
 import nga.oe.schema.vo.RequestDTO;
-import nga.oe.schema.vo.ValidationErrorResponse;
 
 /**
  * <b>Title:</b> ErrorHandlingControllerAdviceTest.java <b>Project:</b>
@@ -65,8 +65,8 @@ class ErrorHandlingControllerAdviceTest {
 		Mockito.when(validator.validate(dto)).thenReturn(violations);
 		Set<ConstraintViolation<RequestDTO>> errs = validator.validate(dto);
 
-		ValidationErrorResponse error = advice.onConstraintValidationException(new ConstraintViolationException(errs));
-		assertEquals(1, error.getViolations().size());
+		EndpointResponse error = advice.onConstraintValidationException(new ConstraintViolationException(errs));
+		assertEquals(1, error.getFailedValidations().size());
 	}
 
 	@Test
@@ -77,9 +77,9 @@ class ErrorHandlingControllerAdviceTest {
 		BindingResult br = Mockito.mock(BindingResult.class);
 		Mockito.when(br.getFieldErrors()).thenReturn(errs);
 
-		ValidationErrorResponse error = advice
+		EndpointResponse error = advice
 				.onMethodArgumentNotValidException(new MethodArgumentNotValidException(null, br));
-		assertEquals(2, error.getViolations().size());
+		assertEquals(2, error.getFailedValidations().size());
 	}
 
 	@Test
@@ -88,20 +88,17 @@ class ErrorHandlingControllerAdviceTest {
 		issues.add(new ValidationMessage.Builder().path("#/required")
 				.customMessage("Required properties are missing from object: extendedData.").build());
 
-		ValidationErrorResponse error = advice.onAppSchemaException(new AppSchemaException(issues));
-		assertEquals(1, error.getViolations().size());
-		assertEquals(error.getViolations().get(0).getFieldName(), issues.iterator().next().getPath());
-		assertEquals(error.getViolations().get(0).getMessage(), issues.iterator().next().getMessage());
+		EndpointResponse error = advice.onAppSchemaException(new AppSchemaException(issues));
+		assertEquals(1, error.getFailedValidations().size());
+		assertEquals(error.getFailedValidations().get(0).getElementId(), issues.iterator().next().getPath());
+		assertEquals(error.getFailedValidations().get(0).getErrorMessage(), issues.iterator().next().getMessage());
 
 	}
 
 	@Test
 	void onUnexpectedExceptionTest() {
-		ValidationErrorResponse error = advice
+		EndpointResponse error = advice
 				.onUnexpectedException(new UnexpectedException("Unexpected", new Exception("Error")));
-		assertEquals(1, error.getViolations().size());
-		assertEquals("Problem Processing Request", error.getViolations().get(0).getFieldName());
-		assertEquals("Unexpected", error.getViolations().get(0).getMessage());
-
+		assertEquals("Unexpected", error.getDebugMessage());
 	}
 }
