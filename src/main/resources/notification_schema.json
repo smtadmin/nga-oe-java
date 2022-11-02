@@ -1,23 +1,39 @@
 {
     "$id": "https://nga.com/oe.notification.schema.json",
     "$schema": "http://json-schema.org/draft-07/schema",
-    "title": "Core Human Feedback Schema",
-    "description": "The General notifiation schema used for sending notifications through the system",
-    "createdBy": "Ray McManemin",
-    "createdFor": "HumanFeedback",
-    "version": ".01",
+    "title": "Core HMF Notification Schema",
+    "description": "The schema used for sending notifications through the system",
+    "createdBy": "Billy Larsen",
+    "createdFor": "HMFk",
+    "version": "1.0.0",
     "type": "object",
+    "metadata": {
+      "name": "HMF Notification Base Schema",
+      "version": "1.0.0",
+      "title": "HMF Notification Schema",
+      "description": "This is the base format for Notifications sent through the HMF Framework",
+      "service": "HMF",
+      "ontology": [
+        "notification",
+        "messaging",
+        "gumdrop",
+        "banner"
+      ],
+      "microservice": "notification"
+    },
     "properties": {
       "ownerId": {
         "type": "string",
-        "minLength": 1
+        "minLength": 1,
+        "format": "uuid"
       },
       "serviceId": {
         "type": "string",
         "minLength": 1
       },
       "groupId": {
-        "type": ["string", "null"]
+        "type": ["string", "null"],
+        "format": "uuid"
       },
       "title": {
         "type": "string",
@@ -33,21 +49,25 @@
       },
       "sessionId": {
         "type": "string",
-        "minLength": 1
+        "minLength": 1,
+        "format": "uuid"
       },
       "orderId": {
-        "type": ["string", "null"]
+        "type": ["string", "null"],
+        "format": "uuid"
       },
       "environmentId": {
         "type": "string",
         "minLength": 1
       },
       "simulationId": {
-        "type": ["string", "null"]
+        "type": ["string", "null"],
+        "format": "uuid"
       },
       "transactionId": {
         "type": "string",
-        "minLength": 1
+        "minLength": 1,
+        "format": "uuid"
       },
       "notificationType": {
         "type": "array",
@@ -55,43 +75,67 @@
           "type": "object",
           "properties": {
             "notificationTypeCode": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "alert",
+                "gumdrop",
+                "email",
+                "sms"
+              ]
             },
             "notificationTypeXrId": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             },
             "notificationId": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             }
           }
-        },
-        "ttyNumber": {
-          "type": "number"
-        },
-        "clearanceLevel": {
+        }
+      },
+      "ttyNumber": {
+        "type": "number"
+      },
+      "clearanceLevel": {
+        "type": "string"
+      },
+      "severityCode": {
+        "type": "string",
+        "enum": [
+          "FATAL", 
+          "SYSTEM", 
+          "ERROR", 
+          "WARNING", 
+          "INFO", 
+          "DEBUG", 
+          "TRACE", 
+          "SUCCESS"
+        ]
+      },
+      "actionable": {
+        "type": "boolean"
+      },
+      "emailIds": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "format": "email"
+        }
+      },
+      "smsIds": {
+        "type": "array",
+        "items": {
           "type": "string"
-        },
-        "severityCode": {
-          "type": "string"
-        },
-        "actionable": {
-          "type": "boolean"
-        },
-        "emailIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "smsIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         }
       }
     },
     "required": [
-        "message"
+        "message",
+        "title",
+        "ownerId",
+        "sessionId",
+        "severityCode",
+        "environmentId"
       ]
   }

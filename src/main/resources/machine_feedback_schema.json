@@ -10,7 +10,8 @@
     "description": "This is a test RTP schema",
     "author": "Joe HMF",
     "service": ["HMF"],
-    "originSchema": ""
+    "originSchema": "",
+  	"microservice": "machine-feedback"
   },
   "title": "HMFEvent",
   "description": "An event through the HMF System",

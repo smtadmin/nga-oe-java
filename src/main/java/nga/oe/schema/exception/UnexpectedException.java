@@ -4,6 +4,10 @@ public class UnexpectedException extends Exception {
 
 	private static final long serialVersionUID = -7952648235876474196L;
 
+	public UnexpectedException(String message) {
+		super(message);
+	}
+
 	public UnexpectedException(String message, Exception e) {
 		super(message, e);
 	}

@@ -44,6 +44,7 @@ dependencies {
 	// Spring Boot (Starters -> https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#using-boot-starter)
 	implementation 'org.springframework.boot:spring-boot-starter'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -78,6 +79,12 @@ dependencies {
 	// Space Libs Import
 	implementation 'com.siliconmtn:spacelibs-java:1.2.7-SNAPSHOT'
 
+	// apache client
+	implementation 'org.apache.httpcomponents:httpclient:4.3.4'
+
+	// MockWebServer for REST Mocks.
+	testImplementation("com.squareup.okhttp3:okhttp:4.10.0")
+	testImplementation("com.squareup.okhttp3:mockwebserver:4.10.0")
 }
 
 // Prevent Spring Boot from looking for a main()

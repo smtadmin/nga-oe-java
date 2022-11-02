@@ -9,6 +9,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +17,7 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersionDetector;
 import com.networknt.schema.ValidationMessage;
+import com.siliconmtn.data.text.StringUtil;
 
 import lombok.extern.log4j.Log4j2;
 import nga.oe.schema.exception.AppSchemaException;
@@ -62,6 +64,19 @@ public class SchemaUtil<T extends Parseable> {
 	public SchemaUtil() {
 		this.mapper = new ObjectMapper();
 		this.mapper.findAndRegisterModules();
+	}
+
+	public boolean isValidJSON(String json) {
+		if(StringUtil.isEmpty(json)) {
+			return false;
+		}
+
+		try {
+			mapper.readTree(json);
+		} catch (JacksonException e) {
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -187,7 +202,7 @@ public class SchemaUtil<T extends Parseable> {
 	 * 
 	 * @param req
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public T convertRequest(RequestDTO req, Class<T> bean) throws AppSchemaException {
 		T dto = null;

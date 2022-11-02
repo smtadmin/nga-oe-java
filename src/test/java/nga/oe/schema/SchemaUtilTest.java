@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -208,5 +210,27 @@ class SchemaUtilTest {
 	@Test
 	void buildKeyParentAndKey() {
 		assertEquals("Hello.world", service.buildKey("Hello", "world"));
+	}
+
+	@Test
+	void isValidJSON() {
+		assertTrue(service.isValidJSON("{\"hellow\": \"world\"}"));
+	}
+
+	@Test
+	void isNotValidJSON() {
+		Map<String, String> json = new HashMap<>();
+		json.put("Hello", "world");
+		assertFalse(service.isValidJSON(json.toString()));
+	}
+
+	@Test
+	void isNotValidJSONNull() {
+		assertFalse(service.isValidJSON(null));
+	}
+
+	@Test
+	void isNotValidJSONEmpty() {
+		assertFalse(service.isValidJSON(""));
 	}
 }

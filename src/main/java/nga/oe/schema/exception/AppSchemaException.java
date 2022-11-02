@@ -35,6 +35,11 @@ public class AppSchemaException extends Exception {
 		this.issues = issues;
 	}
 
+	public AppSchemaException(String message) {
+		super(message);
+		this.issues = new HashSet<>();
+	}
+
 	public AppSchemaException(String message, Exception e) {
 		super(message, e);
 		this.issues = new HashSet<>();
